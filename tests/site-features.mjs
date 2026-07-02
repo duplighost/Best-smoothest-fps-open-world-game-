@@ -54,8 +54,12 @@ const hero = await page.evaluate(() => {
     linerLinks: document.querySelectorAll('a.album-suno-link[href^="/music/"]').length,
     codexLink: !!document.querySelector('a[href="/no-moon/codex/"]'),
     iframesInMusic: document.querySelectorAll('#music iframe').length,
+    toyCards: document.querySelectorAll('.toy-card').length,
+    retiredLinks: document.querySelectorAll('a[href^="/banana"], a[href^="/luma"]').length,
   };
 });
+ok(hero.toyCards === 2, `toy shelf holds exactly Glide + Dispensary (${hero.toyCards})`);
+ok(hero.retiredLinks === 0, 'no links to the retired banana/LUMA toys remain');
 ok(hero.buttons === 3, `hero has exactly 3 buttons (${hero.buttons})`);
 ok(hero.dice && hero.book, 'dice button + book button wired');
 ok(hero.porch, 'the porch light is on');
@@ -65,8 +69,8 @@ ok(hero.linerLinks === 9, `all 9 cards link to liner notes (${hero.linerLinks})`
 ok(hero.codexLink, 'No Moon card links to the boss codex');
 ok(hero.iframesInMusic === 0, 'homepage no longer ships YouTube iframes in the shelf');
 
-// dice: click must land on one of the seven cabinets
-const cabinets = ['/no-moon/', '/skyshard/', '/still/', '/rocket-shoes/', '/marrow/', '/glide/', '/banana/'];
+// dice: click must land on one of the six cabinets
+const cabinets = ['/no-moon/', '/skyshard/', '/still/', '/rocket-shoes/', '/marrow/', '/glide/'];
 await page.evaluate(() => document.getElementById('hero-random-game').scrollIntoView());
 await Promise.all([
   page.waitForURL((u) => cabinets.some((c) => u.pathname === c), { timeout: 30000 }),
@@ -79,6 +83,10 @@ const slugs = ['summer-people', 'immortalized', 'hate-fuck-hotline', 'pretty-gui
 let pagesOk = 0, coversOk = 0, tracksOk = 0, pendingOk = 0;
 for (const slug of slugs) {
   await page.goto(`http://localhost:${PORT}/music/${slug}/`, { waitUntil: 'domcontentloaded' });
+  await page.waitForFunction(() => {
+    const i = document.querySelector('img.cover');
+    return i ? (i.complete && i.naturalWidth > 0) : !!document.querySelector('.css-cover');
+  }, null, { timeout: 20000 }).catch(() => {});
   const r = await page.evaluate(() => ({
     h1: !!document.querySelector('h1'),
     cover: (() => { const i = document.querySelector('img.cover'); return i ? i.complete && i.naturalWidth > 0 : !!document.querySelector('.css-cover'); })(),
@@ -94,6 +102,13 @@ ok(pagesOk === 9, `all 9 album pages render (${pagesOk})`);
 ok(coversOk === 9, `all 9 album covers load (${coversOk})`);
 ok(tracksOk === 6, `6 albums show full tracklists (${tracksOk})`);
 ok(pendingOk === 3, `3 albums show the transcription notice (${pendingOk})`);
+await page.goto(`http://localhost:${PORT}/music/anthropic-omorphizing/`, { waitUntil: 'domcontentloaded' });
+const ao = await page.evaluate(() => ({
+  tracks: document.querySelectorAll('.tracks li').length,
+  blurb: document.querySelector('.blurb')?.textContent || '',
+}));
+ok(ao.tracks === 15, `Anthropic-Omorphizing carries the corrected 15-track order (${ao.tracks})`);
+ok(ao.blurb.includes('Anthropic-omorphizing (v.)'), 'AO page carries the corrected liner blurb');
 
 // --- 404 ---
 await page.goto(`http://localhost:${PORT}/this/does/not/exist`, { waitUntil: 'domcontentloaded' });

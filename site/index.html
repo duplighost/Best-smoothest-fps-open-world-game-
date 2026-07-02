@@ -3212,7 +3212,7 @@
               <div class="game-feature">
                 <span>03</span>
                 <strong>Toys preserved</strong>
-                <p>Glide, LUMA, the Dispensary, and the Screaming Banana Dilemma remain on the smaller toy shelf because they are compact, self-contained, and still worth keeping public.</p>
+                <p>Glide and the Dispensary remain on the smaller toy shelf because they are compact, self-contained, and still worth keeping public.</p>
               </div>
               <div class="game-feature">
                 <span>04</span>
@@ -3226,16 +3226,13 @@
 
 
       <style>
-        .toys-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1.15rem;margin-top:1.6rem}
-        @media (max-width:1180px){.toys-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:1.25rem}}
+        .toys-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.15rem;margin-top:1.6rem;max-width:56rem}
         @media (max-width:680px){.toys-grid{grid-template-columns:1fr;gap:1rem}}
         .toy-card{padding:0;overflow:hidden;display:flex;flex-direction:column;min-height:100%}
         .toy-art{height:11rem;overflow:hidden;background:#090912}
         .toy-art img{width:100%;height:100%;object-fit:cover;display:block;transform:translateZ(0)}
         .toy-art img.k-glide{object-position:center 60%}
-        .toy-art img.k-luma{object-position:center 36%}
         .toy-art img.k-rx{object-position:center 48%;background:#0B2620}
-        .toy-art img.k-banana{object-position:center center;background:#160e13}
         .toy-body{padding:1.05rem 1.25rem 1.35rem;display:flex;flex-direction:column;gap:.55rem;flex:1}
         .toy-body h3{margin:0}
         .toy-body p{margin:0;opacity:.82;font-size:.95rem;line-height:1.5;flex:1}
@@ -3249,7 +3246,7 @@
           <div class="section-header reveal">
             <p class="eyebrow">Toys</p>
             <h2>Little Toys</h2>
-            <p class="lead">A tighter shelf of the pieces that feel worth keeping public right now: a wordless glide, a living light field, one irresponsible pharmacy counter, and the banana incident simulator that refused to die quietly.</p>
+            <p class="lead">A tighter shelf of the pieces that feel worth keeping public right now: a wordless glide through a sunlit forest, and one deeply irresponsible pharmacy counter.</p>
           </div>
           <div class="toys-grid">
             <article class="card cool reveal toy-card">
@@ -3261,27 +3258,11 @@
               </div>
             </article>
             <article class="card cool reveal toy-card">
-              <div class="toy-art"><img class="k-luma" src="assets/toy-luma.jpg" width="1600" height="900" alt="LUMA — a living field of light" loading="lazy"></div>
-              <div class="toy-body">
-                <h3>LUMA</h3>
-                <p>A living field of light that moves on its own and comes alive to your music or the mic. Touch paints it. It never looks the same twice.</p>
-                <a class="button cyan" href="/luma/"><i class="fa-solid fa-wave-square"></i> Open LUMA</a>
-              </div>
-            </article>
-            <article class="card cool reveal toy-card">
               <div class="toy-art"><img class="k-rx" src="assets/toy-dispensary.svg" width="1600" height="900" alt="The Qualiacology Dispensary — a prescription label and a two-tone capsule" loading="lazy"></div>
               <div class="toy-body">
                 <h3>The Dispensary</h3>
                 <p>The Dept. of Impossible Pharmacology is open. Press the capsule, receive a prescription for a compound that doesn't exist — full nomenclature, boxed warnings, infinite refills.</p>
                 <a class="button gold" href="/dispensary/"><i class="fa-solid fa-pills"></i> Fill a Prescription</a>
-              </div>
-            </article>
-            <article class="card cool reveal toy-card">
-              <div class="toy-art"><img class="k-banana" src="assets/toy-banana.svg" width="1600" height="900" alt="The Screaming Banana Dilemma — a banana glowing at the end of a hallway" loading="lazy"></div>
-              <div class="toy-body">
-                <h3>The Screaming Banana Dilemma</h3>
-                <p>A first-person ethical incident about a kitten, a freezer, and a banana that should not have lungs — warmed up visually so it no longer looks like cursed placeholder drywall.</p>
-                <a class="button" href="/banana/"><i class="fa-solid fa-lemon"></i> Face the Banana</a>
               </div>
             </article>
           </div>
@@ -3956,7 +3937,7 @@
     (function () {
       var die = document.getElementById("hero-random-game");
       if (!die) return;
-      var cabinets = ["/no-moon/", "/skyshard/", "/still/", "/rocket-shoes/", "/marrow/", "/glide/", "/banana/"];
+      var cabinets = ["/no-moon/", "/skyshard/", "/still/", "/rocket-shoes/", "/marrow/", "/glide/"];
       die.addEventListener("click", function (e) {
         e.preventDefault();
         var pick = cabinets[Math.floor(Math.random() * cabinets.length)];
