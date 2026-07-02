@@ -1056,6 +1056,39 @@
       border: none;
     }
 
+    /* real sleeve art on the shelf */
+    .album-art-link {
+      display: block;
+      line-height: 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .album-art {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      transition: transform var(--transition);
+    }
+
+    .album-card:hover .album-art {
+      transform: scale(1.02);
+    }
+
+    .album-wip-badge {
+      display: inline-block;
+      margin-left: 0.55rem;
+      vertical-align: middle;
+      font-size: 0.58rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 0.3em 0.8em;
+      border-radius: 999px;
+      background: rgba(255, 190, 84, 0.12);
+      border: 1px solid rgba(255, 190, 84, 0.45);
+      color: #ffd9a0;
+    }
+
     .album-suno-link {
       display: flex;
       align-items: center;
@@ -1502,6 +1535,19 @@
     .social-link .arrow {
       color: var(--muted);
       flex-shrink: 0;
+    }
+
+    /* the porch light. it is not explained. */
+    .porch-light {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      margin-left: 0.55rem;
+      vertical-align: middle;
+      border-radius: 50%;
+      background: #ffca7a;
+      box-shadow: 0 0 6px 1px rgba(255, 202, 122, 0.55);
+      opacity: 0.85;
     }
 
     .footer-bottom {
@@ -2917,13 +2963,9 @@
             </div>
 
             <div class="button-row">
-              <a class="button cyan" href="https://discord.gg/NwvxKxUJpC" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-discord"></i> Join the Community</a>
-              <a class="button" href="/no-moon/"><i class="fa-solid fa-gamepad"></i> Play No Moon</a>
-              <a class="button" href="/skyshard/"><i class="fa-solid fa-mountain-sun"></i> Play Skyshard</a>
-              <a class="button" href="/still/"><i class="fa-solid fa-moon"></i> Enter Still</a>
-              <a class="button" href="/rocket-shoes/"><i class="fa-solid fa-bolt"></i> Play Rocket Shoes</a>
-              <a class="button" href="/marrow/"><i class="fa-solid fa-ghost"></i> Play Marrow</a>
-              <a class="button gold" href="#book"><i class="fa-solid fa-book-open"></i> The Book</a>
+              <a class="button cyan" href="https://discord.gg/NwvxKxUJpC" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-discord"></i> The Discord</a>
+              <a class="button" id="hero-random-game" href="#game"><i class="fa-solid fa-dice"></i> Play a Game</a>
+              <a class="button gold" href="/book.html"><i class="fa-solid fa-book-open"></i> Read the Book</a>
             </div>
           </div>
 
@@ -3131,6 +3173,7 @@
               </p>
               <div class="button-row portal-actions">
                 <a class="button cyan" href="/no-moon/"><i class="fa-solid fa-gamepad"></i> Start Descent</a>
+                <a class="ghost-button" href="/no-moon/codex/"><i class="fa-solid fa-layer-group"></i> Boss Codex</a>
                 <button class="ghost-button" type="button" data-copy-link="/no-moon/"><i class="fa-solid fa-copy"></i> Copy Game Link</button>
               </div>
               <div class="copy-status" data-copy-status aria-live="polite"></div>
@@ -3285,14 +3328,13 @@
 
           <div class="album-grid">
             <article class="album-card card reveal">
-              <div class="album-embed">
-                <iframe src="https://www.youtube.com/embed/CEj1waMHZ48" title="Summer People" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
-              </div>
+              <a class="album-art-link" href="/music/summer-people/"><img class="album-art" src="/assets/albums/summer-people.jpg" alt="Summer People — album cover" loading="lazy" width="900" height="900" /></a>
               <div class="album-body">
                 <h3>Summer People</h3>
                 <p>
                   The latest Doopliss album: sunlit hooks with something wrong under the deck chairs. Summer shimmer, social rot, and a grin that knows exactly where the bodies are sunscreened.
                 </p>
+                <a class="album-suno-link" href="/music/summer-people/"><i class="fa-solid fa-record-vinyl"></i> Liner notes &amp; tracklist</a>
                 <div class="album-tags">
                   <span>latest</span>
                   <span>summer noir</span>
@@ -3302,14 +3344,13 @@
             </article>
 
             <article class="album-card card reveal">
-              <div class="album-embed">
-                <iframe src="https://www.youtube.com/embed/CY1al0jKaxY" title="Immortalized" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
-              </div>
+              <a class="album-art-link" href="/music/immortalized/"><img class="album-art" src="/assets/albums/immortalized.jpg" alt="Immortalized — album cover" loading="lazy" width="900" height="900" /></a>
               <div class="album-body">
                 <h3>Immortalized</h3>
                 <p>
                   The one where redemption was never on the table and the songs are the receipt. He doesn’t repent — he gets remembered. Lacquered into permanence by the same glossy hooks that should have buried him.
                 </p>
+                <a class="album-suno-link" href="/music/immortalized/"><i class="fa-solid fa-record-vinyl"></i> Liner notes &amp; tracklist</a>
                 <div class="album-tags">
                   <span>villain pop</span>
                   <span>permanent record</span>
@@ -3318,11 +3359,7 @@
             </article>
 
             <article class="album-card card reveal">
-              <div class="album-cover cover-5">
-                <span class="cover-top">Doopliss</span>
-                <strong class="cover-title">Hate Fuck Hotline</strong>
-                <span class="cover-note">dial tone pop</span>
-              </div>
+              <a class="album-art-link" href="/music/hate-fuck-hotline/"><img class="album-art" src="/assets/albums/hate-fuck-hotline.jpg" alt="Hate Fuck Hotline — album cover" loading="lazy" width="900" height="900" /></a>
               <div class="album-body">
                 <h3>Hate Fuck Hotline</h3>
                 <p>
@@ -3331,6 +3368,7 @@
                 <a class="album-suno-link" href="https://suno.com/playlist/1814f23d-b0e5-4de8-a902-bbf987783955" target="_blank" rel="noopener noreferrer">
                   <i class="fa-solid fa-wave-square"></i> Listen on Suno
                 </a>
+                <a class="album-suno-link" href="/music/hate-fuck-hotline/"><i class="fa-solid fa-record-vinyl"></i> Liner notes &amp; tracklist</a>
                 <div class="album-tags">
                   <span>unhinged</span>
                   <span>dial tone pop</span>
@@ -3339,11 +3377,7 @@
             </article>
 
             <article class="album-card card reveal">
-              <div class="album-cover cover-1">
-                <span class="cover-top">Doopliss</span>
-                <strong class="cover-title">Pretty Guilty</strong>
-                <span class="cover-note">12 songs</span>
-              </div>
+              <a class="album-art-link" href="/music/pretty-guilty/"><img class="album-art" src="/assets/albums/pretty-guilty.jpg" alt="Pretty Guilty — album cover" loading="lazy" width="900" height="900" /></a>
               <div class="album-body">
                 <h3>Pretty Guilty</h3>
                 <p>
@@ -3352,6 +3386,7 @@
                 <a class="album-suno-link" href="https://suno.com/playlist/f9d518b5-9752-46e4-a533-ffd49446e92a" target="_blank" rel="noopener noreferrer">
                   <i class="fa-solid fa-wave-square"></i> Listen on Suno
                 </a>
+                <a class="album-suno-link" href="/music/pretty-guilty/"><i class="fa-solid fa-record-vinyl"></i> Liner notes &amp; tracklist</a>
                 <div class="album-tags">
                   <span>glamour rot</span>
                   <span>verdict pop</span>
@@ -3361,14 +3396,13 @@
             </article>
 
             <article class="album-card card reveal">
-              <div class="album-embed">
-                <iframe src="https://www.youtube.com/embed/yUnQ6XG6mzE" title="Bite Marks &amp; Bubblegum" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
-              </div>
+              <a class="album-art-link" href="/music/bite-marks-and-bubblegum/"><img class="album-art" src="/assets/albums/bite-marks-and-bubblegum.jpg" alt="Bite Marks &amp; Bubblegum — album cover" loading="lazy" width="900" height="900" /></a>
               <div class="album-body">
                 <h3>Bite Marks &amp; Bubblegum</h3>
                 <p>
                   The one that smiles with perfect lipstick while the floor drops out underneath you. Glossy hooks, bruised undertones, and the exact second attraction starts looking like self-destruction.
                 </p>
+                <a class="album-suno-link" href="/music/bite-marks-and-bubblegum/"><i class="fa-solid fa-record-vinyl"></i> Liner notes &amp; tracklist</a>
                 <div class="album-tags">
                   <span>neon hooks</span>
                   <span>obsession</span>
@@ -3378,14 +3412,13 @@
             </article>
 
             <article class="album-card card reveal">
-              <div class="album-embed">
-                <iframe src="https://www.youtube.com/embed/ByeMWC_DpcU" title="Death Threats &amp; Makeup Sex" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
-              </div>
+              <a class="album-art-link" href="/music/death-threats-and-makeup-sex/"><img class="album-art" src="/assets/albums/death-threats-and-makeup-sex.jpg" alt="Death Threats and Makeup Sex — album cover" loading="lazy" width="900" height="900" /></a>
               <div class="album-body">
                 <h3>Death Threats &amp; Makeup Sex</h3>
                 <p>
                   The big one. Twenty-eight tracks of the entire toxic cycle on repeat — the fight, the fuck, the apology, the amnesia, the relapse. The album that proves love and destruction share a zip code.
                 </p>
+                <a class="album-suno-link" href="/music/death-threats-and-makeup-sex/"><i class="fa-solid fa-record-vinyl"></i> Liner notes &amp; tracklist</a>
                 <div class="album-tags">
                   <span>toxic loop</span>
                   <span>emotional arson</span>
@@ -3395,18 +3428,48 @@
             </article>
 
             <article class="album-card card reveal">
-              <div class="album-embed">
-                <iframe src="https://www.youtube.com/embed/QzVcPeFDiAc" title="Cherry Lipstick (And Other Red Flags)" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
-              </div>
+              <a class="album-art-link" href="/music/cherry-lipstick/"><img class="album-art" src="/assets/albums/cherry-lipstick.jpg" alt="Cherry Lipstick (And Other Red Flags) — album cover" loading="lazy" width="900" height="900" /></a>
               <div class="album-body">
                 <h3>Cherry Lipstick (And Other Red Flags)</h3>
                 <p>
                   A glittering field guide to attraction, denial, and knowing better about five seconds too late. Romantic comedy energy with a switchblade hidden somewhere in the purse.
                 </p>
+                <a class="album-suno-link" href="/music/cherry-lipstick/"><i class="fa-solid fa-record-vinyl"></i> Liner notes &amp; tracklist</a>
                 <div class="album-tags">
                   <span>red flag pop</span>
                   <span>dark wit</span>
                   <span>catchy chaos</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="album-card card reveal">
+              <a class="album-art-link" href="/music/thick-thighs-sweet-lies/"><img class="album-art" src="/assets/albums/thick-thighs-sweet-lies.jpg" alt="Thick Thighs, Sweet Lies — album cover" loading="lazy" width="900" height="900" /></a>
+              <div class="album-body">
+                <h3>Thick Thighs, Sweet Lies</h3>
+                <p>
+                  The candy-apple one. Body heat, bad decisions, and compliments you should have read the fine print on. Every sweet thing on this record is load-bearing.
+                </p>
+                <a class="album-suno-link" href="/music/thick-thighs-sweet-lies/"><i class="fa-solid fa-record-vinyl"></i> Liner notes &amp; tracklist</a>
+                <div class="album-tags">
+                  <span>velvet menace</span>
+                  <span>sugar with teeth</span>
+                </div>
+              </div>
+            </article>
+
+            <article class="album-card card reveal">
+              <a class="album-art-link" href="/music/anthropic-omorphizing/"><img class="album-art" src="/assets/albums/anthropic-omorphizing.jpg" alt="Anthropic-Omorphizing — working album cover" loading="lazy" width="900" height="900" /></a>
+              <div class="album-body">
+                <h3>Anthropic-Omorphizing<span class="album-wip-badge">In progress</span></h3>
+                <p>
+                  The machine-heart record, still on the workbench. Love, loneliness, and large language models &mdash; written with the thing it&rsquo;s about. Cover art is a working draft; the songs are not.
+                </p>
+                <a class="album-suno-link" href="/music/anthropic-omorphizing/"><i class="fa-solid fa-record-vinyl"></i> Liner notes &amp; tracklist</a>
+                <div class="album-tags">
+                  <span>in progress</span>
+                  <span>machine heart</span>
+                  <span>written by claude</span>
                 </div>
               </div>
             </article>
@@ -3700,7 +3763,7 @@
 
           <footer class="footer-bottom">
             <div><strong>© 2026 Qualiacology</strong></div>
-            <div>The chemistry of being alive, examined with signal, style, and a little neon damage.</div>
+            <div>The chemistry of being alive, examined with signal, style, and a little neon damage. <span class="porch-light" id="porch-light" aria-hidden="true"></span></div>
           </footer>
         </div>
       </section>
@@ -3883,6 +3946,58 @@
         if (b2) b2.href = mailto;
         if (t2) t2.textContent = full;
       })();
+    })();
+  </script>
+
+  <script>
+    // "Play a Game" deals you one: a random draw from the whole arcade.
+    // Progressive enhancement — with no JS the button is a plain #game anchor.
+    // (To remove the dice behavior, delete this block; the button still works.)
+    (function () {
+      var die = document.getElementById("hero-random-game");
+      if (!die) return;
+      var cabinets = ["/no-moon/", "/skyshard/", "/still/", "/rocket-shoes/", "/marrow/", "/glide/", "/banana/"];
+      die.addEventListener("click", function (e) {
+        e.preventDefault();
+        var pick = cabinets[Math.floor(Math.random() * cabinets.length)];
+        window.location.href = pick;
+      });
+    })();
+
+    // The porch light. Between 2 and 4 a.m. local, clicking it plays a single
+    // soft piano A that pulses twice, and stops. It is never explained.
+    (function () {
+      var light = document.getElementById("porch-light");
+      if (!light) return;
+      light.addEventListener("click", function () {
+        var h = new Date().getHours();
+        if (h < 2 || h >= 4) return;
+        try {
+          var ctx = new (window.AudioContext || window.webkitAudioContext)();
+          var master = ctx.createGain();
+          master.gain.value = 0.0001;
+          master.connect(ctx.destination);
+          // a piano-ish A3: fundamental + soft octaves, struck once
+          [[220, 0.5], [440, 0.22], [880, 0.07], [1760, 0.02]].forEach(function (p) {
+            var o = ctx.createOscillator();
+            o.type = "sine";
+            o.frequency.value = p[0];
+            var g = ctx.createGain();
+            g.gain.value = p[1];
+            o.connect(g); g.connect(master);
+            o.start();
+            o.stop(ctx.currentTime + 6);
+          });
+          var t = ctx.currentTime;
+          // two slow pulses, then gone
+          master.gain.setValueAtTime(0.0001, t);
+          master.gain.exponentialRampToValueAtTime(0.16, t + 0.04);
+          master.gain.exponentialRampToValueAtTime(0.02, t + 1.5);
+          master.gain.exponentialRampToValueAtTime(0.11, t + 1.9);
+          master.gain.exponentialRampToValueAtTime(0.0001, t + 5.2);
+          setTimeout(function () { try { ctx.close(); } catch (e) {} }, 6500);
+        } catch (e) {}
+      });
     })();
   </script>
 </body>

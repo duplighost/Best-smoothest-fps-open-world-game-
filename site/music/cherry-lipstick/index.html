@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cherry Lipstick (And Other Red Flags) — Doopliss | Qualiacology</title>
+  <meta name="description" content="Cherry Lipstick (And Other Red Flags) — a Doopliss record. A glittering field guide to attraction, denial, and knowing better about five seconds too late. Rom" />
+  <meta property="og:type" content="music.album" />
+  <meta property="og:title" content="Cherry Lipstick (And Other Red Flags) — Doopliss" />
+  <meta property="og:description" content="A glittering field guide to attraction, denial, and knowing better about five seconds too late. Romantic comedy energy with a switchblade hidden somewhere in the purse." />
+  <meta property="og:image" content="https://qualiacology.com/assets/albums/cherry-lipstick.jpg" />
+  <link rel="canonical" href="https://qualiacology.com/music/cherry-lipstick/" />
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0d1020; color: #e8e9f2;
+      font-family: "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif;
+      line-height: 1.6; min-height: 100vh;
+      background-image: radial-gradient(ellipse at 20% -10%, rgba(255, 84, 158, 0.12), transparent 52%),
+                        radial-gradient(ellipse at 90% 10%, rgba(84, 200, 255, 0.08), transparent 45%);
+    }
+    a { color: #7fd7ff; }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 2rem 1.4rem 5rem; }
+    .crumb { display: inline-block; margin-bottom: 2.2rem; color: #9aa0b8; text-decoration: none; font-size: 0.95rem; letter-spacing: 0.04em; }
+    .crumb:hover { color: #e8e9f2; }
+    .top { display: grid; grid-template-columns: minmax(260px, 380px) 1fr; gap: 2.4rem; align-items: start; }
+    .cover { width: 100%; height: auto; border-radius: 18px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.07); }
+    .css-cover { aspect-ratio: 1; border-radius: 18px; display: flex; flex-direction: column; justify-content: space-between; padding: 1.4rem;
+      background: linear-gradient(160deg, #2b0f1e, #14060f 60%), radial-gradient(circle at 70% 20%, rgba(255, 84, 158, 0.35), transparent 55%);
+      border: 1px solid rgba(255, 84, 158, 0.25); text-transform: uppercase; letter-spacing: 0.14em; }
+    .css-cover strong { font-size: 1.7rem; line-height: 1.2; letter-spacing: 0.05em; }
+    .css-cover span { font-size: 0.75rem; color: #c98aa8; }
+    .cover-note { margin-top: 0.7rem; font-size: 0.82rem; color: #9aa0b8; font-style: italic; }
+    .eyebrow { text-transform: uppercase; letter-spacing: 0.28em; font-size: 0.72rem; color: #ff549e; font-weight: 700; }
+    h1 { font-size: clamp(1.9rem, 4.5vw, 3rem); line-height: 1.12; margin: 0.45rem 0 1rem; letter-spacing: -0.01em; }
+    .badge { display: inline-block; margin-left: 0.6rem; vertical-align: middle; font-size: 0.62rem; letter-spacing: 0.2em; text-transform: uppercase;
+      padding: 0.32em 0.9em; border-radius: 999px; background: rgba(84, 200, 255, 0.14); border: 1px solid rgba(84, 200, 255, 0.4); color: #a8e6ff; }
+    .badge.wip { background: rgba(255, 190, 84, 0.12); border-color: rgba(255, 190, 84, 0.45); color: #ffd9a0; }
+    .blurb { color: #c6cadb; max-width: 56ch; }
+    .tags { margin: 1.1rem 0 1.4rem; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .tags span { font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase; color: #9aa0b8;
+      border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 999px; padding: 0.3em 0.85em; }
+    .btn { display: inline-block; margin: 0 0.6rem 0.6rem 0; padding: 0.6em 1.25em; border-radius: 999px; text-decoration: none;
+      font-weight: 700; font-size: 0.9rem; letter-spacing: 0.03em; color: #0d1020; background: linear-gradient(120deg, #7fd7ff, #ff9ecb); }
+    .btn:hover { filter: brightness(1.1); }
+    section { margin-top: 3rem; }
+    h2 { font-size: 1.15rem; letter-spacing: 0.2em; text-transform: uppercase; color: #9aa0b8; margin-bottom: 1.2rem; }
+    .tracks { list-style: none; }
+    .tracks li { display: flex; gap: 1.1rem; padding: 0.72rem 0.4rem; border-bottom: 1px solid rgba(255, 255, 255, 0.07); align-items: baseline; }
+    .tracks li:hover { background: rgba(255, 255, 255, 0.025); }
+    .tno { font-variant-numeric: tabular-nums; color: #ff549e; font-weight: 700; font-size: 0.85rem; min-width: 1.8em; }
+    .tracks strong { display: block; font-size: 1.02rem; }
+    .tracks em { display: block; font-style: normal; color: #8d93ab; font-size: 0.86rem; margin-top: 0.1rem; }
+    .pending { border: 1px dashed rgba(255, 255, 255, 0.2); border-radius: 14px; padding: 1.4rem 1.6rem; color: #b9bed2; max-width: 56ch; }
+    .pending strong { color: #ffd9a0; letter-spacing: 0.04em; }
+    .embed { position: relative; aspect-ratio: 16 / 9; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45); max-width: 780px; }
+    .embed iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+    .shelf-nav { margin-top: 3.6rem; padding-top: 1.6rem; border-top: 1px solid rgba(255, 255, 255, 0.08); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+    .shelf-nav a { text-decoration: none; font-weight: 600; }
+    @media (max-width: 760px) { .top { grid-template-columns: 1fr; } .cover { max-width: 420px; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="crumb" href="/#music">← Qualiacology / Music</a>
+    <div class="top">
+      <div><img class="cover" src="/assets/albums/cherry-lipstick.jpg" alt="Cherry Lipstick (And Other Red Flags) — album cover" width="900" height="900" /></div>
+      <div>
+        <p class="eyebrow">Doopliss · LP</p>
+        <h1>Cherry Lipstick (And Other Red Flags)</h1>
+        <p class="blurb">A glittering field guide to attraction, denial, and knowing better about five seconds too late. Romantic comedy energy with a switchblade hidden somewhere in the purse.</p>
+        <div class="tags"><span>red flag pop</span><span>dark wit</span><span>catchy chaos</span></div>
+        <div><a class="btn" href="https://www.youtube.com/watch?v=QzVcPeFDiAc" target="_blank" rel="noopener noreferrer">▸ Full album on YouTube</a></div>
+      </div>
+    </div>
+    <section>
+      <h2>Side A / Side B</h2>
+      <div class="pending">
+        <strong>Tracklist en route.</strong>
+        <p>This record is real and playable below — the sleeve notes are still being transcribed from the master tapes. Check back soon.</p>
+      </div>
+    </section>
+    <section><h2>Play the whole thing</h2><div class="embed"><iframe src="https://www.youtube.com/embed/QzVcPeFDiAc" title="Cherry Lipstick (And Other Red Flags) — full album" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div></section>
+    <nav class="shelf-nav">
+      <a href="/#music">← Back to the shelf</a>
+      <a href="https://suno.com/@doopliss" target="_blank" rel="noopener noreferrer">All 500+ songs on Suno →</a>
+    </nav>
+  </div>
+</body>
+</html>

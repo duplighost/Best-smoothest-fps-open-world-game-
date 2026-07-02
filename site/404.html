@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>404 — Qualiacology</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: #0d1020;
+      color: #e8e9f2;
+      font-family: "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif;
+      line-height: 1.65;
+      background-image: radial-gradient(ellipse at 15% -10%, rgba(255, 84, 158, 0.14), transparent 50%),
+                        radial-gradient(ellipse at 95% 110%, rgba(84, 200, 255, 0.1), transparent 45%);
+      padding: 2rem 1.4rem;
+    }
+    main { max-width: 34rem; text-align: center; }
+    .rx {
+      font-size: clamp(4.4rem, 16vw, 7.5rem);
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      background: linear-gradient(120deg, #7fd7ff, #ff9ecb 60%, #ffd9a0);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      filter: drop-shadow(0 10px 34px rgba(255, 84, 158, 0.25));
+    }
+    h1 { font-size: 1.35rem; margin: 1.1rem 0 0.7rem; letter-spacing: 0.01em; }
+    p { color: #b9bed2; }
+    p + p { margin-top: 0.65rem; }
+    .fine { font-size: 0.82rem; color: #8d93ab; font-style: italic; }
+    .row { margin-top: 2rem; display: flex; gap: 0.7rem; justify-content: center; flex-wrap: wrap; }
+    a.btn {
+      display: inline-block;
+      padding: 0.68em 1.4em;
+      border-radius: 999px;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #0d1020;
+      background: linear-gradient(120deg, #7fd7ff, #ff9ecb);
+    }
+    a.btn.ghost {
+      background: transparent;
+      color: #e8e9f2;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+    }
+    a.btn:hover { filter: brightness(1.12); }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="rx">404</div>
+    <h1>This page doesn&rsquo;t exist.</h1>
+    <p>
+      Neither does anything at the Dispensary, and we still fill prescriptions.
+      Existence has never been a strict requirement around here.
+    </p>
+    <p class="fine">Side effects of a missing page may include: mild disorientation, checking the URL twice, and an unplanned visit to the arcade.</p>
+    <div class="row">
+      <a class="btn" href="/">Take me home</a>
+      <a class="btn ghost" href="/#game">The arcade</a>
+      <a class="btn ghost" href="/dispensary/">The Dispensary</a>
+    </div>
+  </main>
+</body>
+</html>

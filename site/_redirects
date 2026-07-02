@@ -40,3 +40,8 @@
 /marrow.html        /marrow/                  301!
 /horror             /marrow/                  302
 /the-house          /marrow/                  302
+
+# --- boss codex + record shelf ---
+/codex          /no-moon/codex/           302
+/music          /#music                   302
+/records        /#music                   302

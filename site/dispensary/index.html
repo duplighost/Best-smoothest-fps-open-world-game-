@@ -322,6 +322,45 @@
       .stamp { opacity: 0.92; }
       html { scroll-behavior: auto; }
     }
+
+    /* ── share row: every prescription is a permalink ── */
+    .share-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    .share-row button {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--shelf-text);
+      background: transparent;
+      border: 1px solid rgba(168, 196, 184, 0.3);
+      border-radius: 999px;
+      padding: 8px 15px;
+      cursor: pointer;
+      transition: color 160ms ease, border-color 160ms ease;
+    }
+    .share-row button:hover { color: var(--amber); border-color: var(--amber); }
+
+    /* ── print: just the label, pinned to the fridge ── */
+    @media print {
+      body { background: #fff !important; padding: 0; display: block; }
+      .home-link, header, .capsule, footer, .share-row, .restock, .shelf-count { display: none !important; }
+      main { margin: 0; }
+      .printwrap { animation: none !important; }
+      .label {
+        margin: 8mm auto 0 !important;
+        transform: none !important;
+        box-shadow: none !important;
+        border: 1px solid #999;
+        page-break-inside: avoid;
+      }
+      .stamp { animation: none !important; opacity: 0.92; }
+    }
   </style>
 </head>
 <body>
@@ -518,9 +557,22 @@
       return a;
     }
 
-    function makeRx() {
-      return String(Math.floor(100000 + Math.random() * 900000))
-        .replace(/(\d{3})(\d{3})/, "$1-$2");
+    // Every compound has a stable slug and a stable Rx number, so a
+    // prescription is a PERMALINK: /dispensary/?rx=qualiafen fills the same
+    // label for whoever you text it to.
+    function slugOf(c) {
+      return c.brand.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
+    }
+
+    function hashStr(s) {
+      let h = 2166136261;
+      for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+      return h >>> 0;
+    }
+
+    function makeRx(seed) {
+      const n = 100000 + (hashStr(seed) % 900000);
+      return String(n).replace(/(\d{3})(\d{3})/, "$1-$2");
     }
 
     function makeBars(rxString) {
@@ -556,9 +608,10 @@
     const btn = document.getElementById("dispense");
 
     function renderLabel(c) {
-      const rx = makeRx();
+      const slug = slugOf(c);
+      const rx = makeRx(slug);
       const bars = makeBars(rx);
-      const rotation = (Math.random() * 3.2 - 1.6).toFixed(2);
+      const rotation = (((hashStr(slug + "tilt") % 320) / 100) - 1.6).toFixed(2);
 
       let html = '<div class="printwrap"><div class="label" role="region" '
         + 'aria-label="Prescription label for ' + esc(c.brand) + '" '
@@ -604,6 +657,29 @@
     let deck = shuffle(FORMULARY.map(function (_, i) { return i; }));
     let restockTimer = null;
 
+    function present(idx) {
+      const c = FORMULARY[idx];
+      const slug = slugOf(c);
+      tray.innerHTML = renderLabel(c)
+        + '<div class="share-row">'
+        + '<button type="button" id="copy-rx">Copy prescription link</button>'
+        + '<button type="button" id="print-rx">Print &mdash; pin it to the fridge</button>'
+        + '</div>';
+      history.replaceState(null, "", "?rx=" + slug);
+      const copyBtn = document.getElementById("copy-rx");
+      copyBtn.addEventListener("click", function () {
+        const url = location.origin + location.pathname + "?rx=" + slug;
+        const done = function () {
+          copyBtn.textContent = "Copied — go worry a friend";
+          setTimeout(function () { copyBtn.textContent = "Copy prescription link"; }, 2200);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(url).then(done, done);
+        } else done();
+      });
+      document.getElementById("print-rx").addEventListener("click", function () { window.print(); });
+    }
+
     function dispense() {
       if (deck.length === 0) {
         deck = shuffle(FORMULARY.map(function (_, i) { return i; }));
@@ -612,13 +688,23 @@
         restockTimer = setTimeout(function () { restockEl.hidden = true; }, 1400);
       }
       const next = deck.shift();
-      tray.innerHTML = renderLabel(FORMULARY[next]);
+      present(next);
       shelfCount.hidden = false;
       shelfCount.textContent = "formulary: " + deck.length + " of "
         + FORMULARY.length + " compounds remaining on shelf";
     }
 
     btn.addEventListener("click", dispense);
+
+    // a shared prescription fills itself on arrival
+    (function () {
+      const want = new URLSearchParams(location.search).get("rx");
+      if (!want) return;
+      const idx = FORMULARY.findIndex(function (c) { return slugOf(c) === want.toLowerCase(); });
+      if (idx < 0) return;
+      deck = deck.filter(function (i) { return i !== idx; });
+      present(idx);
+    })();
   </script>
 </body>
 </html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Defeated — No Moon Boss Codex</title>
+  <meta name="description" content="The No Moon boss codex. Cards stay sealed until you have beaten the thing on them. Trophies for the night shift." />
+  <link rel="canonical" href="https://qualiacology.com/no-moon/codex/" />
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      background: #030818;
+      color: #eef4ff;
+      font-family: "Avenir Next", "Segoe UI", system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      background-image: radial-gradient(ellipse at 50% -20%, rgba(96, 140, 255, 0.14), transparent 55%),
+                        radial-gradient(ellipse at 85% 110%, rgba(189, 231, 255, 0.07), transparent 45%);
+      padding: 2.2rem 1.4rem 5rem;
+    }
+    .wrap { max-width: 1000px; margin: 0 auto; }
+    .crumb { color: #8fa3c8; text-decoration: none; font-size: 0.92rem; letter-spacing: 0.05em; }
+    .crumb:hover { color: #eef4ff; }
+    header { margin: 2rem 0 2.4rem; display: flex; align-items: end; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+    .kicker { text-transform: uppercase; letter-spacing: 0.3em; font-size: 0.7rem; color: #7fb2e8; font-weight: 800; }
+    h1 { font-size: clamp(2rem, 5vw, 3rem); letter-spacing: 0.01em; margin-top: 0.3rem; }
+    .count { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.16em; color: #9db4d8; font-weight: 800;
+      border: 1px solid rgba(189, 231, 255, 0.25); padding: 0.5em 1.1em; border-radius: 999px; background: rgba(4, 12, 34, 0.6); }
+    .lead { color: #aebdd9; max-width: 58ch; margin-bottom: 2.4rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 1.1rem; }
+    .cardslot { perspective: 900px; }
+    .flip { position: relative; width: 100%; aspect-ratio: 210 / 300; transform-style: preserve-3d;
+      transition: transform 0.85s cubic-bezier(0.22, 0.9, 0.3, 1); }
+    .cardslot.revealed .flip { transform: rotateY(180deg); }
+    .face { position: absolute; inset: 0; backface-visibility: hidden; border-radius: 16px; overflow: hidden;
+      border: 1px solid rgba(189, 231, 255, 0.18); box-shadow: 0 16px 38px rgba(0, 0, 0, 0.45); }
+    .face img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .face.back img { filter: saturate(0.85) brightness(0.8); }
+    .face.front { transform: rotateY(180deg); }
+    .plate { position: absolute; left: 0; right: 0; bottom: 0; padding: 2rem 0.9rem 0.75rem;
+      background: linear-gradient(180deg, transparent, rgba(2, 6, 18, 0.92) 62%); }
+    .plate strong { display: block; font-size: 1rem; letter-spacing: 0.02em; }
+    .plate span { font-size: 0.62rem; letter-spacing: 0.22em; text-transform: uppercase; color: #9fdcff; font-weight: 800; }
+    .seal { position: absolute; left: 12px; right: 12px; bottom: 12px; text-align: center; font-size: 0.6rem;
+      letter-spacing: 0.24em; text-transform: uppercase; font-weight: 900; color: rgba(224, 245, 255, 0.75);
+      border: 1px solid rgba(189, 231, 255, 0.25); border-radius: 999px; padding: 0.55em 0; background: rgba(0, 0, 0, 0.42); }
+    .rumor .seal { color: rgba(224, 245, 255, 0.45); border-style: dashed; }
+    .foot { margin-top: 3rem; display: flex; gap: 0.8rem; flex-wrap: wrap; }
+    .btn { display: inline-block; padding: 0.62em 1.4em; border-radius: 999px; text-decoration: none; font-weight: 700;
+      font-size: 0.92rem; color: #030818; background: linear-gradient(120deg, #9fdcff, #cdb8ff); }
+    .btn.ghost { background: transparent; color: #eef4ff; border: 1px solid rgba(255, 255, 255, 0.22); }
+    .btn:hover { filter: brightness(1.1); }
+    .note { margin-top: 1.6rem; font-size: 0.8rem; color: #7488ab; font-style: italic; max-width: 52ch; }
+    @media (prefers-reduced-motion: reduce) { .flip { transition: none; } }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="crumb" href="/">← Qualiacology</a>
+    <header>
+      <div>
+        <p class="kicker">No Moon · Field Guide</p>
+        <h1>The Defeated</h1>
+      </div>
+      <div class="count" id="count">0 / 6 revealed</div>
+    </header>
+    <p class="lead">
+      Every card here stays sealed until you have personally put the thing on it down.
+      The codex reads your No Moon save from this browser — beat a boss in the game and
+      its card turns over here, permanently. No screenshots. Earn the wall.
+    </p>
+    <div class="grid" id="grid"></div>
+    <p class="note">
+      Two of these cards are printed for things the archive only has rumors of. If you have
+      seen them, the codex would like a word.
+    </p>
+    <div class="foot">
+      <a class="btn" href="/no-moon/">Play No Moon</a>
+      <a class="btn ghost" href="/#game">The arcade</a>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var ART = "/assets/no-moon/bosses/";
+      var BOSSES = [
+        { id: "falseMoon", name: "False Moon", img: "false-moon-card.webp" },
+        { id: "warden", name: "Graven Warden", img: "warden-card.webp" },
+        { id: "nightFerry", name: "Night Ferry", img: "night-ferry-card.webp" },
+        { id: "archon", name: "Null Archon", img: "archon-card.webp" },
+        { id: "spiggot", name: "Spiggot", img: "spiggot-card.webp" },
+        { id: "sun", name: "The Sun", img: "sun-card.webp" },
+        { id: "drownedSun", name: "The Drowned Sun", img: "drowned-sun-card.webp", rumor: true },
+        { id: "firstWalker", name: "The First Walker", img: "first-walker-card.webp", rumor: true }
+      ];
+
+      function readJson(key) {
+        try { var raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
+      }
+      var save = readJson("noMoonSave_v1") || {};
+      var mirror = readJson("noMoonProgress_v68") || {};
+      var defeated = Object.assign({}, (mirror.defeatedBosses || {}), (save.defeatedBosses || {}));
+
+      var grid = document.getElementById("grid");
+      var revealed = 0, total = 0;
+      BOSSES.forEach(function (b, i) {
+        var open = !!defeated[b.id];
+        if (!b.rumor) total++;
+        if (open) revealed++;
+        var slot = document.createElement("div");
+        slot.className = "cardslot" + (b.rumor && !open ? " rumor" : "");
+        slot.innerHTML =
+          '<div class="flip">' +
+            '<div class="face back"><img src="' + ART + 'card-back.webp" alt="A sealed boss card" loading="lazy" />' +
+              '<div class="seal">' + (b.rumor && !open ? "Rumored" : "Sealed") + '</div></div>' +
+            '<div class="face front"><img src="' + ART + b.img + '" alt="' + b.name + ' — defeated" loading="lazy" />' +
+              '<div class="plate"><span>Defeated</span><strong>' + b.name + '</strong></div></div>' +
+          '</div>';
+        grid.appendChild(slot);
+        if (open) {
+          // stagger the flips so walking in with a full wall feels like a ceremony
+          setTimeout(function () { slot.classList.add("revealed"); }, 380 + i * 190);
+        }
+      });
+      document.getElementById("count").textContent = revealed + " / " + total + " revealed";
+    })();
+  </script>
+</body>
+</html>
