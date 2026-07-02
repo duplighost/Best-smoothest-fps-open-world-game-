@@ -13,6 +13,8 @@ const DEFAULTS = () => ({
   shards: 0,            // health core shards (3 => +1 pip)
   maxPips: 4,
   entered: {},          // interiors visited at least once
+  skins: {},            // cosmetic gun skins earned at battle shrines
+  skin: 'default',      // currently worn
   playSeconds: 0,
 });
 

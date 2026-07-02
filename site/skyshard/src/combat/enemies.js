@@ -15,6 +15,32 @@ import { clamp01, damp } from '../core/math.js';
 const E = CFG.enemies;
 const _v = new THREE.Vector3();
 
+let _glowTex = null;
+const _glowMats = new Map();
+function getGlowMat(type) {
+  if (_glowMats.has(type)) return _glowMats.get(type);
+  if (!_glowTex) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const g = c.getContext('2d');
+    const grad = g.createRadialGradient(32, 32, 2, 32, 32, 30);
+    grad.addColorStop(0, 'rgba(255,255,255,0.85)');
+    grad.addColorStop(0.45, 'rgba(255,255,255,0.28)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 64, 64);
+    _glowTex = new THREE.CanvasTexture(c);
+  }
+  const col = ENEMY_TYPES[type].color;
+  const m = new THREE.SpriteMaterial({
+    map: _glowTex, color: new THREE.Color(col[0], col[1], col[2]),
+    transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending,
+    depthWrite: false, fog: false,
+  });
+  _glowMats.set(type, m);
+  return m;
+}
+
 export class Enemies {
   constructor() {
     this.list = [];
@@ -41,6 +67,13 @@ export class Enemies {
       });
       mesh.userData.baseEmissive = mesh.userData.mats.map((m) => m.emissiveIntensity);
       mesh.userData.baseEmissiveHex = mesh.userData.mats.map((m) => m.emissive.getHex());
+      // presence glow: a soft pool of the enemy's color at its feet — reads
+      // through fog and dusk so nothing ambushes you that you couldn't see
+      const glowSprite = new THREE.Sprite(getGlowMat(type));
+      glowSprite.position.y = 0.12;
+      glowSprite.scale.setScalar(ENEMY_TYPES[type].radius * 4.6);
+      mesh.add(glowSprite);
+      mesh.userData.glowSprite = glowSprite;
     }
     return mesh;
   }
@@ -53,7 +86,7 @@ export class Enemies {
 
   // Telegraph → materialize. ctx tags world vs interior enemies.
   spawn(type, x, z, opts = {}) {
-    this.pending.push({ type, x, z, y: opts.y, t: E.telegraphTime, ctx: opts.ctx || 'world', boost: opts.boost || 1 });
+    this.pending.push({ type, x, z, y: opts.y, t: E.telegraphTime, ctx: opts.ctx || 'world', boost: opts.boost || 1, tag: opts.tag });
     const def = ENEMY_TYPES[type];
     G.particles?.burst('spark', x, (opts.y ?? this._groundY(x, z, def)) + 1, z, 6, { color: def.color });
   }
@@ -71,7 +104,7 @@ export class Enemies {
     mesh.scale.setScalar(0.01);
     this.scene.add(mesh);
     const e = {
-      type: p.type, def, mesh, ctx: p.ctx,
+      type: p.type, def, mesh, ctx: p.ctx, tag: p.tag,
       x: p.x, y, z: p.z, vx: 0, vy: 0, vz: 0,
       hp: Math.ceil(def.hp * p.boost), maxHp: Math.ceil(def.hp * p.boost),
       flashT: 0, contactCd: 0, shootT: 1 + Math.random() * (def.shootEvery || 2),
@@ -216,6 +249,10 @@ export class Enemies {
       e.mesh.scale.set(e.spawnT > 0 ? e.mesh.scale.x : 1 / sq, e.spawnT > 0 ? e.mesh.scale.y : sq, e.spawnT > 0 ? e.mesh.scale.z : 1 / sq);
       if (distXZ > 0.01) e.mesh.rotation.y = Math.atan2(dx, dz);
       const ud = e.mesh.userData;
+      if (ud.glowSprite) {
+        const pulse = 1 + Math.sin(e.t * 3.2) * 0.12 + e.flashT * 2;
+        ud.glowSprite.scale.setScalar(e.def.radius * 4.6 * pulse);
+      }
       if (ud.spin) ud.spin.rotation.y += dt * 2.4;
       if (ud.spin2) ud.spin2.rotation.x += dt * 1.7;
       if (ud.swell && e.fuse >= 0) {

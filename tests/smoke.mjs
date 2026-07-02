@@ -171,6 +171,43 @@ try {
     .then(() => true).catch(() => false);
   check(offStream, 'jump exits the stream');
 
+  // battle shrine: wake it, clear two waves, earn the region skin, T-cycle
+  console.log('· battle shrine…');
+  await page.evaluate(() => { window.__game.god(true); window.__game.teleport(-40, 236); });
+  await page.evaluate(() => window.__game.teleport(-40, 240));
+  const fightStarted = await page.waitForFunction(() =>
+    window.__game.G.features.shrines[0].state === 'fight', null, { timeout: 15000 })
+    .then(() => true).catch(() => false);
+  check(fightStarted, 'shrine wakes and starts the fight');
+  // dispatch both waves via debug removal (kill juice is covered elsewhere)
+  for (let round = 0; round < 24; round++) {
+    await page.waitForTimeout(700);
+    const st = await page.evaluate(() => {
+      const G = window.__game.G;
+      for (const e of [...G.enemies.list]) if (e.tag === 'shrine0') G.enemies.remove(e, false);
+      return G.features.shrines[0].state;
+    });
+    if (st === 'cleared') break;
+  }
+  const shrineDone = await page.evaluate(() => ({
+    state: window.__game.G.features.shrines[0].state,
+    skin: !!window.__game.G.save.skins.valebloom,
+    worn: window.__game.G.weapon.skinKey,
+  }));
+  check(shrineDone.state === 'cleared', `shrine clears (${shrineDone.state})`);
+  check(shrineDone.skin, 'Vale Bloom skin earned');
+  check(shrineDone.worn === 'valebloom', `skin auto-equipped (${shrineDone.worn})`);
+  await page.evaluate(() => window.__game.press('KeyT'));
+  await page.waitForTimeout(800);
+  const cycled = await page.evaluate(() => window.__game.G.weapon.skinKey);
+  check(cycled !== 'valebloom', `T cycles skins (now ${cycled})`);
+  // enemy presence glow exists on pooled meshes
+  await page.evaluate(() => window.__game.spawn('puff', 6, 0));
+  await page.waitForTimeout(1500);
+  const hasGlow = await page.evaluate(() =>
+    window.__game.G.enemies.list.some((e) => !!e.mesh.userData.glowSprite));
+  check(hasGlow, 'enemies carry their presence glow');
+
   const realErrors = errors.filter((e) => !/favicon|Autoplay|WebGL.*fallback|GroupMarkerNotSet/i.test(e));
   check(realErrors.length === 0, `no console errors (${realErrors.length})`);
   if (realErrors.length) console.log(realErrors.slice(0, 12).map((e) => '    · ' + e.slice(0, 300)).join('\n'));

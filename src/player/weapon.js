@@ -12,6 +12,8 @@ import { juice } from '../fx/juice.js';
 import { hitEnemy } from '../combat/damage.js';
 import { Pool } from '../core/pool.js';
 import { clamp01, damp } from '../core/math.js';
+import { SKINS } from '../world/features.js';
+import { save } from '../core/save.js';
 
 const W = CFG.weapon;
 const _dir = new THREE.Vector3();
@@ -48,6 +50,8 @@ export class Weapon {
     barrel.rotation.x = Math.PI / 2;
     barrel.position.set(0, 0.02, -0.28);
     const grip = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.16, 0.08), vmMat(0x3c4356));
+    this.skinMats = { body: body.material, barrel: barrel.material, grip: grip.material };
+    this.tracerColor = 0xaee6ff;
     grip.position.set(0, -0.12, 0.06);
     this.coreGlow = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6),
       new THREE.MeshBasicMaterial({ color: 0x86d8ff, fog: false }));
@@ -88,6 +92,31 @@ export class Weapon {
     return m;
   }
 
+  // cosmetic skins from battle shrines: colors and light only, never numbers
+  applySkin(key) {
+    const sk = SKINS[key] || SKINS.default;
+    this.skinMats.body.color.setHex(sk.body);
+    this.skinMats.body.emissive.setHex(sk.body);
+    this.skinMats.barrel.color.setHex(sk.barrel);
+    this.skinMats.barrel.emissive.setHex(sk.barrel);
+    this.skinMats.grip.color.setHex(sk.grip);
+    this.skinMats.grip.emissive.setHex(sk.grip);
+    this.coreGlow.material.color.setHex(sk.glow);
+    this.tracerColor = sk.tracer;
+    this.skinKey = key;
+  }
+
+  cycleSkin() {
+    const owned = ['default', ...Object.keys(G.save.skins).filter((k) => G.save.skins[k])];
+    const idx = owned.indexOf(this.skinKey || 'default');
+    const next = owned[(idx + 1) % owned.length];
+    this.applySkin(next);
+    G.save.skin = next;
+    save();
+    sfx('pickup', { gain: 1.1 });
+    G.hud?.whisper(SKINS[next].name, 1.4);
+  }
+
   syncEvolution(save) {
     this.addons.lance.visible = !!save.altFires.lance;
     this.addons.seeker.visible = !!save.altFires.seeker;
@@ -97,7 +126,10 @@ export class Weapon {
     const lvl = ['dash', 'lance', 'doubleJump', 'seeker', 'grapple'].filter(
       (k) => save.abilities[k] || save.altFires[k]).length;
     this.level = lvl;
-    this.coreGlow.material.color.setHSL(0.55 + lvl * 0.05, 0.9, 0.6 + lvl * 0.04);
+    // evolution tints the core only while unskinned — a worn skin keeps its glow
+    if (!this.skinKey || this.skinKey === 'default') {
+      this.coreGlow.material.color.setHSL(0.55 + lvl * 0.05, 0.9, 0.6 + lvl * 0.04);
+    }
   }
 
   moveTracersTo(scene) {
@@ -142,6 +174,9 @@ export class Weapon {
     } else {
       this.charging = 0;
     }
+
+    // skin swap — cosmetic, so it lives on a throwaway key
+    if (input.pressed('KeyT')) this.cycleSkin();
 
     // seeker — Q
     if (G.save.altFires.seeker && input.pressed('KeyQ') && this.seekerCd <= 0) {
@@ -219,7 +254,7 @@ export class Weapon {
     this.muzzle.getWorldPosition(_tmp);
     G.particles?.burst('muzzle', _tmp.x, _tmp.y, _tmp.z, 2);
     G.rovers?.pulse(_tmp.x, _tmp.y, _tmp.z, [0.6, 0.85, 1], 1.6, 16, 8);
-    this._tracer(_tmp.x, _tmp.y, _tmp.z, endX, endY, endZ, 0xaee6ff, 0.03);
+    this._tracer(_tmp.x, _tmp.y, _tmp.z, endX, endY, endZ, this.tracerColor, 0.03);
   }
 
   fireLance() {

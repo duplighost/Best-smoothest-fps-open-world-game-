@@ -22,6 +22,7 @@ await page.evaluate(() => window.__game.start());
 await page.waitForTimeout(3000);
 
 const stops = [
+  ['09-shrine', -40, 254, 0],
   ['10-vale', 40, 300, -0.5],
   ['11-frost-lake', -300, -300, -2.2],
   ['12-shatter-isles', 330, -400, 2.4],

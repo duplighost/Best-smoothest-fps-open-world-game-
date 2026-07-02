@@ -24,6 +24,7 @@ import { ColliderField } from './world/collision.js';
 import { plantWorld } from './world/vegetation.js';
 import { Destinations } from './world/destinations.js';
 import { Streams } from './world/streams.js';
+import { Features } from './world/features.js';
 import { updateGlows, updateCulling } from './world/props.js';
 import { Enemies } from './combat/enemies.js';
 import { Projectiles } from './combat/projectiles.js';
@@ -138,6 +139,7 @@ async function boot() {
 
   G.destinations = new Destinations(worldScene, G.worldCollide);
   G.streams = new Streams(worldScene);
+  G.features = new Features(worldScene, G.worldCollide);
   setLoad(0.85);
   await nextFrame();
 
@@ -158,6 +160,7 @@ async function boot() {
   G.player.pos.set(SPAWN.x, terrainHeight(SPAWN.x, SPAWN.z), SPAWN.z);
   G.weapon = new Weapon(camera, worldScene);
   G.weapon.syncEvolution(G.save);
+  G.weapon.applySkin(G.save.skin || 'default');
   worldScene.add(camera);   // viewmodel rides the camera
 
   G.postfx = new PostFX(renderer);
@@ -427,6 +430,7 @@ function loop(tMs) {
     if (cullTimer <= 0) { cullTimer = 0.4; updateCulling(pl.pos.x, pl.pos.z); }
     G.sky.update(rawDt, t, pl.pos.x, pl.pos.z, G.worldScene, G.sun, G.hemi);
     G.streams.update(rawDt, t);
+    G.features.update(rawDt, t);
     const entering = G.destinations.update(rawDt, t, pl.pos.x, pl.pos.z);
     if (entering) { if (pl.stream) G.streams.detach(pl, false); enterInterior(entering); }
     // sun + shadow frustum follow the player
@@ -498,7 +502,7 @@ let ambientT = 0;
 function emitAmbient(rawDt, pl) {
   ambientT -= rawDt;
   if (ambientT > 0) return;
-  ambientT = 0.09;
+  ambientT = 0.055;
   const region = dominantRegion(pl.pos.x, pl.pos.z);
   const type = { vale: 'ambient', ember: 'ember', frost: 'snow', mycel: 'spore', shatter: 'ambient' }[region];
   const a = Math.random() * Math.PI * 2;

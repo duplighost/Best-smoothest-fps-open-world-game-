@@ -97,7 +97,7 @@ const FLORA = {
     },
   },
   grass: {
-    region: null, count: 4200, minW: 0, scale: [0.7, 1.6], tint: 'region',
+    region: null, count: 5600, minW: 0, scale: [0.7, 1.6], tint: 'region',
     make: () => mergeGeos([
       { geo: new Co(0.05, 0.62, 3), color: [1, 1, 1], translate: [0, 0.31, 0], rotate: [0.12, 0, 0] },
       { geo: new Co(0.05, 0.5, 3), color: [0.85, 0.9, 0.8], translate: [0.14, 0.25, 0.05], rotate: [0, 0, -0.2] },
@@ -105,7 +105,7 @@ const FLORA = {
     ]),
   },
   flower: {
-    region: null, count: 800, minW: 0, scale: [0.6, 1.2], tint: 'flower', valeBias: true,
+    region: null, count: 1400, minW: 0, scale: [0.6, 1.2], tint: 'flower', valeBias: true,
     make: () => mergeGeos([
       { geo: new C(0.015, 0.02, 0.5, 4), color: [0.4, 0.6, 0.3], translate: [0, 0.25, 0] },
       { geo: new I(0.09, 0), color: [1, 1, 1], translate: [0, 0.52, 0] },
