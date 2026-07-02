@@ -155,6 +155,22 @@ try {
   console.log(`  info- fps=${s.fps} draws=${s.drawCalls} tris=${(s.tris / 1000) | 0}k`);
   if (SHOTS) await page.screenshot({ path: join(shotDir, '05-mill-exterior.png') });
 
+  // wind streams: latch on touch, carried along, jump out keeping speed
+  console.log('· wind streams…');
+  await page.evaluate(() => window.__game.teleport(8, 62));
+  const latched = await page.waitForFunction(() => !!window.__game.G.player.stream, null, { timeout: 15000 })
+    .then(() => true).catch(() => false);
+  check(latched, 'stream latches on touch');
+  const sp0 = await page.evaluate(() => ({ x: window.__game.G.player.pos.x, z: window.__game.G.player.pos.z }));
+  await page.waitForTimeout(5000);
+  const sp1 = await page.evaluate(() => ({ x: window.__game.G.player.pos.x, z: window.__game.G.player.pos.z }));
+  const rode = Math.hypot(sp1.x - sp0.x, sp1.z - sp0.z);
+  check(rode > 3, `stream carries the player (${rode.toFixed(1)}m)`);
+  await page.evaluate(() => window.__game.press('Space'));
+  const offStream = await page.waitForFunction(() => !window.__game.G.player.stream, null, { timeout: 8000 })
+    .then(() => true).catch(() => false);
+  check(offStream, 'jump exits the stream');
+
   const realErrors = errors.filter((e) => !/favicon|Autoplay|WebGL.*fallback|GroupMarkerNotSet/i.test(e));
   check(realErrors.length === 0, `no console errors (${realErrors.length})`);
   if (realErrors.length) console.log(realErrors.slice(0, 12).map((e) => '    · ' + e.slice(0, 300)).join('\n'));

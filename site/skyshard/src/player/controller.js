@@ -34,6 +34,7 @@ export class Player {
     this.grappling = false;
     this.grapplePoint = new THREE.Vector3();
     this.grappleCd = 0;
+    this.stream = null;        // riding a wind stream (streams.js drives us)
 
     this.pips = G.save.maxPips ?? P.startPips;
     this.maxPips = G.save.maxPips ?? P.startPips;
@@ -101,6 +102,13 @@ export class Player {
     this.grappleCd = Math.max(0, this.grappleCd - dt);
     this.iFrames = Math.max(0, this.iFrames - dt);
     this.coyote = this.grounded ? P.coyoteTime : Math.max(0, this.coyote - dt);
+
+    // --- riding a wind stream: the current owns the body, you own the eyes ---
+    if (this.stream) {
+      this.bobPhase += dt * P.bobRate * 0.6;
+      G.streams?.ride(this, dt);
+      return;
+    }
 
     // --- dash ---
     if (wantDash && owned.dash && this.dashCd <= 0 && this.dashT <= 0) {
@@ -287,6 +295,7 @@ export class Player {
   // ---- damage ---------------------------------------------------------------
   hurt(n, fromX, fromZ) {
     if (this.iFrames > 0 || this.dead) return false;
+    if (this.stream) G.streams?.detach(this, false);
     this.pips -= n;
     this.iFrames = P.hurtIFrames;
     juice.shake(CFG.shake.hurt);
@@ -338,9 +347,9 @@ export class Player {
     camera.rotation.x = this.pitch + sh.pitch + juice.kickPitch;
     camera.rotation.z = swayX * 0.6 + sh.roll + (this.gliding ? Math.sin(this.bobPhase * 0.7) * 0.02 : 0);
 
-    // FOV: speed + dash/glide stretch + juice kicks
-    const over = Math.max(0, this.speedXZ - P.walkSpeed);
-    const target = 74 + over * 0.9 + (this.gliding ? 4 : 0) + juice.fovKick;
+    // FOV: speed + dash/glide stretch + juice kicks (capped so streams thrill, not warp)
+    const over = Math.min(16, Math.max(0, this.speedXZ - P.walkSpeed));
+    const target = 74 + over * 0.9 + (this.gliding ? 4 : 0) + (this.stream ? 3 : 0) + juice.fovKick;
     this.fov = damp(this.fov, target, 6, rawDt);
     if (Math.abs(camera.fov - this.fov) > 0.01) {
       camera.fov = this.fov;

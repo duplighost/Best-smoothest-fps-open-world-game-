@@ -23,6 +23,7 @@ import { Sky } from './world/sky.js';
 import { ColliderField } from './world/collision.js';
 import { plantWorld } from './world/vegetation.js';
 import { Destinations } from './world/destinations.js';
+import { Streams } from './world/streams.js';
 import { updateGlows, updateCulling } from './world/props.js';
 import { Enemies } from './combat/enemies.js';
 import { Projectiles } from './combat/projectiles.js';
@@ -136,6 +137,7 @@ async function boot() {
   await nextFrame();
 
   G.destinations = new Destinations(worldScene, G.worldCollide);
+  G.streams = new Streams(worldScene);
   setLoad(0.85);
   await nextFrame();
 
@@ -424,8 +426,9 @@ function loop(tMs) {
     cullTimer -= rawDt;
     if (cullTimer <= 0) { cullTimer = 0.4; updateCulling(pl.pos.x, pl.pos.z); }
     G.sky.update(rawDt, t, pl.pos.x, pl.pos.z, G.worldScene, G.sun, G.hemi);
+    G.streams.update(rawDt, t);
     const entering = G.destinations.update(rawDt, t, pl.pos.x, pl.pos.z);
-    if (entering) enterInterior(entering);
+    if (entering) { if (pl.stream) G.streams.detach(pl, false); enterInterior(entering); }
     // sun + shadow frustum follow the player
     G.sun.position.set(pl.pos.x + 60, 90, pl.pos.z + 40);
     G.sun.target.position.set(pl.pos.x, pl.pos.y, pl.pos.z);

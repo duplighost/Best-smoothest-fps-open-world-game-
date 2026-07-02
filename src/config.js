@@ -6,7 +6,7 @@ export const CFG = {
   player: {
     eyeHeight: 1.62,
     radius: 0.38,
-    walkSpeed: 5.1,          // action pace — prev games' 2.5-4.1 read as sluggish
+    walkSpeed: 6.0,          // action pace — the world should feel eager underfoot
     sprintMult: 1.42,
     accel: 16,               // [ported] vel += (wish - vel) * min(1, accel*dt)
     friction: 13,            // [ported]
@@ -25,7 +25,7 @@ export const CFG = {
   },
 
   abilities: {
-    dash:   { speed: 16.5, time: 0.17, cooldown: 1.5, iFrames: 0.30, killRefund: 0.9, exitSpeedMult: 1.25 },
+    dash:   { speed: 19.5, time: 0.17, cooldown: 1.4, iFrames: 0.30, killRefund: 0.9, exitSpeedMult: 1.3 },
     doubleJumpVel: 8.2,
     glideFall: 2.6,          // capped fall speed while gliding
     glideControl: 1.5,       // extra air control gliding
@@ -76,6 +76,15 @@ export const CFG = {
     telegraphTime: 0.4,      // [ported] spawn glyph before the body exists
     contactDamage: 1,
     hitFlash: 0.15,          // [ported]
+  },
+
+  streams: {                 // wind streams — the Shardlands' grind rails
+    speed: 27,
+    accel: 16,               // ramp into full speed after latching
+    latchR: 2.8,             // touch the current and it takes you
+    detachUp: 7.5,           // jumping out pops you into the sky
+    detachKeep: 0.92,        // how much stream speed you keep on exit
+    cooldown: 1.1,           // no instant re-latch after jumping out
   },
 
   world: {
