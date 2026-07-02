@@ -73,22 +73,15 @@ export const CFG = {
 
   // --- Atmosphere palettes per zone. Fog is a murky blue/charcoal, never pure
   //     black, so trees and rooms silhouette against it like the references. ---
+  // Three acts + the crypt beneath. Each act owns one palette: the wood is a
+  // drowned blue, the house is dust and dead wallpaper, the graveyard is
+  // moonlit verdigris, and the crypt is the colour of the inside of a body.
+  // The ambient floor stays high enough that nowhere is a pitch-black void.
   zones: {
-    forest:       { fog: 0x0e1622, fogDensity: 0.038, ambient: 0x1a2334, ambientI: 0.5,  sky: 0x0e1622 },
-    mansion:      { fog: 0x0b0b13, fogDensity: 0.052, ambient: 0x16131d, ambientI: 0.36, sky: 0x0b0b13 },
-    basement:     { fog: 0x0d080a, fogDensity: 0.072, ambient: 0x1a0b0d, ambientI: 0.24, sky: 0x0d080a },
-    // The deep levels lean on one saturated key colour each so they never blur
-    // together. Fog still thickens a little toward the climax for "the world
-    // closes in," but only gently — navigation must stay easy; the FEAR escalates,
-    // not the blindness. The ambient floor is held high enough that no corridor is
-    // ever a pitch-black void you get lost in.
-    conservatory: { fog: 0x0a221b, fogDensity: 0.038, ambient: 0x2a6a54, ambientI: 0.50, sky: 0x0a221b },
-    library:      { fog: 0x130c06, fogDensity: 0.042, ambient: 0x5a3620, ambientI: 0.56, sky: 0x130c06 },
-    nursery:      { fog: 0x160a17, fogDensity: 0.046, ambient: 0x5e2742, ambientI: 0.55, sky: 0x160a17 },
-    bathhouse:    { fog: 0x05131a, fogDensity: 0.050, ambient: 0x186470, ambientI: 0.54, sky: 0x05131a },
-    gallery:      { fog: 0x120611, fogDensity: 0.052, ambient: 0x551d49, ambientI: 0.52, sky: 0x120611 },
-    chapel:       { fog: 0x14060a, fogDensity: 0.056, ambient: 0x551812, ambientI: 0.50, sky: 0x14060a },
-    final:        { fog: 0x160611, fogDensity: 0.078, ambient: 0x220a18, ambientI: 0.18, sky: 0x160611 },
+    forest:    { fog: 0x0e1622, fogDensity: 0.038, ambient: 0x1a2334, ambientI: 0.5,  sky: 0x0e1622 },
+    house:     { fog: 0x0b0b13, fogDensity: 0.046, ambient: 0x1d1824, ambientI: 0.44, sky: 0x0b0b13 },
+    graveyard: { fog: 0x14262b, fogDensity: 0.036, ambient: 0x2c4a52, ambientI: 0.62, sky: 0x14262b },
+    crypt:     { fog: 0x160611, fogDensity: 0.070, ambient: 0x2a0e1c, ambientI: 0.26, sky: 0x160611 },
   },
 
   // --- Director / dread ---

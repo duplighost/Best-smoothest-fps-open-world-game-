@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 const REDUCED_MOTION = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
-import { CFG, Quality } from './config.js?v=distinct-mazes';
+import { CFG, Quality } from './config.js?v=three-acts';
 
 // First-person body + camera + flashlight. Movement is velocity-based with
 // acceleration/friction for weight, axis-resolved against the active collider
@@ -18,6 +18,7 @@ export class Player {
     this.breathPhase = Math.random() * 10;
     this.stamina = 1;
     this.field = null;          // ColliderField, set per level
+    this.groundAt = null;       // (x,z)=>y, set per level — stairs and landings
     this.height = CFG.eyeHeight;
     this.crawl = false;         // set by crawl-space triggers; lowers the eye + slows
     this.eyeNow = CFG.eyeHeight; // smoothed eye height
@@ -128,7 +129,7 @@ export class Player {
   }
 
   teleport(x, z, yaw) {
-    this.pos.set(x, 0, z); this.vel.set(0, 0, 0);
+    this.pos.set(x, this.groundAt ? this.groundAt(x, z) : 0, z); this.vel.set(0, 0, 0);
     if (yaw !== undefined) this.yaw = yaw;
   }
 
@@ -211,6 +212,14 @@ export class Player {
     }
     this.pos.x = nx; this.pos.z = nz;
 
+    // --- ground height (stairs/landings). Eased so steps feel like steps, not
+    //     an elevator; the ease is fast enough that a run upstairs never floats.
+    if (this.groundAt) {
+      const gy = this.groundAt(nx, nz);
+      this.pos.y += (gy - this.pos.y) * Math.min(1, dt * 11);
+      if (Math.abs(gy - this.pos.y) < 0.005) this.pos.y = gy;
+    } else if (this.pos.y !== 0) this.pos.y = 0;
+
     // --- headbob & breathing ---
     const horizSpeed = Math.hypot(this.vel.x, this.vel.z);
     if (horizSpeed > 0.15) this.bobPhase += dt * CFG.bobSpeed * (running ? 1.35 : 1.0);
@@ -231,7 +240,7 @@ export class Player {
     // --- compose camera transform (eye lowers smoothly when crawling) ---
     this.eyeNow += ((this.crawl ? 0.5 : this.height) - this.eyeNow) * Math.min(1, dt * 7);
     const eye = this.eyeNow + bob * (this.crawl ? 0.4 : 1) + breath;
-    this.camera.position.set(this.pos.x + sway, eye, this.pos.z);
+    this.camera.position.set(this.pos.x + sway, this.pos.y + eye, this.pos.z);
     this.camera.position.add(this._shakeV);
     const euler = new THREE.Euler(this.pitch + this._shakeV.z * 0.4, this.yaw, sway * 0.6, 'YXZ');
     this.camera.quaternion.setFromEuler(euler);

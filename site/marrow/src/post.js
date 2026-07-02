@@ -38,10 +38,14 @@ const frag = /* glsl */`
     vec3 warm = col * vec3(1.18, 0.98, 0.74);
     col = mix(cold, warm, hi);
 
-    // Filmic contrast and black crush that rises with dread, while leaving a
-    // little grey detail in the darkest parts so the player can still read shape.
+    // Filmic contrast that rises with dread — but ONLY from the low-mids up.
+    // A plain pivot-0.5 curve was crushing everything under ~0.2 to black,
+    // which killed moonlit distances entirely: the world outside the torch
+    // beam became unreadable void. Shadows now keep their raw values, so dim
+    // scenery stays dim instead of gone.
     float contrast = 1.10 + uDread * 0.22 + uPulse * 0.08;
-    col = (col - 0.5) * contrast + 0.5;
+    vec3 filmic = (col - 0.5) * contrast + 0.5;
+    col = mix(col, filmic, smoothstep(0.03, 0.30, l));
     col = max(col, vec3(0.006));
 
     // One-pass halation on bright torch hits. It is not a true blur, but it

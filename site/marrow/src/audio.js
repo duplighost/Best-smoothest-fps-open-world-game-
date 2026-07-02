@@ -142,16 +142,10 @@ export const Audio = (() => {
   // base Hz; ivals = the two upper voices over it; diss = the dread pair that
   // swells with tension; sub = the floor; color = lowpass corner (mud control).
   const BED_VOICE = {
-    forest:       { root: 55,   ivals: [1.5, 2.0],   diss: [1.06, 1.50], sub: 33, color: 360 }, // open fifth, airy
-    mansion:      { root: 49,   ivals: [1.19, 1.5],  diss: [1.06, 1.50], sub: 31, color: 330 }, // a minor third creeps in
-    basement:     { root: 41,   ivals: [1.06, 1.5],  diss: [1.06, 1.41], sub: 28, color: 280 }, // lower, grinding
-    conservatory: { root: 52,   ivals: [1.5, 2.02],  diss: [1.02, 1.50], sub: 30, color: 380 }, // glassy, detuned octave
-    library:      { root: 46,   ivals: [1.33, 1.78], diss: [1.06, 1.33], sub: 29, color: 320 }, // hollow fourths
-    nursery:      { root: 44,   ivals: [1.2, 2.4],   diss: [1.12, 1.50], sub: 27, color: 340 }, // a sick lullaby + high ghost
-    bathhouse:    { root: 39,   ivals: [1.41, 1.5],  diss: [1.06, 1.41], sub: 26, color: 260 }, // tritone, wet
-    gallery:      { root: 43,   ivals: [1.25, 1.6],  diss: [1.06, 1.50], sub: 28, color: 320 },
-    chapel:       { root: 36,   ivals: [1.06, 1.41], diss: [1.06, 1.41], sub: 24, color: 230 }, // low, oppressive
-    final:        { root: 32,   ivals: [1.06, 1.5],  diss: [1.06, 1.50], sub: 22, color: 210 }, // subterranean
+    forest:    { root: 55, ivals: [1.5, 2.0],   diss: [1.06, 1.50], sub: 33, color: 360 }, // open fifth, airy
+    house:     { root: 47, ivals: [1.19, 1.5],  diss: [1.06, 1.50], sub: 30, color: 320 }, // a minor third creeps in
+    graveyard: { root: 41, ivals: [1.33, 1.78], diss: [1.06, 1.41], sub: 27, color: 300 }, // hollow fourths under moonlight
+    crypt:     { root: 32, ivals: [1.06, 1.5],  diss: [1.06, 1.50], sub: 22, color: 210 }, // subterranean
   };
 
   function applyVoice(z, glide = 3) {
@@ -776,7 +770,7 @@ export const Audio = (() => {
     setTimeout(() => {
       if (!ctx) return;
       if (bed.gain) bed.gain.gain.setTargetAtTime(bed.base ?? 0.38, now(), 0.6);
-      if (wind.gain) wind.gain.gain.setTargetAtTime(zone === 'forest' || zone === 'conservatory' ? 0.1 : 0.02, now(), 0.9);
+      if (wind.gain) wind.gain.gain.setTargetAtTime(zone === 'forest' || zone === 'graveyard' ? 0.1 : 0.02, now(), 0.9);
     }, dur * 1000);
   }
 
@@ -800,7 +794,7 @@ export const Audio = (() => {
     if (bed.dissGain) bed.dissGain.gain.setTargetAtTime(tension * tension * 0.95, now(), 0.4);
     if (bed.subGain) bed.subGain.gain.setTargetAtTime(0.06 + tension * 0.42, now(), 0.4);
     if (wind.bp) {
-      const outside = zone === 'forest' || zone === 'conservatory';
+      const outside = zone === 'forest' || zone === 'graveyard';
       wind.bp.frequency.setTargetAtTime((outside ? 420 : 190) + tension * (outside ? 620 : 360), now(), 0.9);
       wind.bp.Q.setTargetAtTime(0.65 + tension * 1.2, now(), 0.9);
     }
@@ -857,10 +851,58 @@ export const Audio = (() => {
     applyVoice(z);                         // re-pitch the drone for this wing — the soundtrack descends with you
     // wind only outside; reverb longer & wetter as we descend (but pulled back a
     // little so the wet tail doesn't smear the drone into mud)
-    const outside = z === 'forest' || z === 'conservatory';
-    const wet = z === 'basement' || z === 'bathhouse' || z === 'chapel' || z === 'final';
+    const outside = z === 'forest' || z === 'graveyard';
+    const wet = z === 'crypt';
     if (wind.gain) wind.gain.gain.setTargetAtTime(outside ? 0.1 : 0.02, now(), 1.5);
-    revGain.gain.setTargetAtTime(wet ? 0.95 : z === 'mansion' || z === 'library' || z === 'gallery' ? 0.8 : 0.62, now(), 2);
+    revGain.gain.setTargetAtTime(wet ? 0.95 : z === 'house' ? 0.8 : 0.62, now(), 2);
+  }
+
+  // one lone bell toll — struck by nothing, up in the chapel tower
+  function bell(pos) {
+    if (!ctx) return;
+    const t = now(); const p = panFor(pos);
+    // an inharmonic partial stack reads as bronze; the minor-third partial is
+    // what makes church bells sound like grief.
+    [[1, 0.20], [2.0, 0.09], [2.4, 0.12], [3.01, 0.05], [4.2, 0.028], [5.4, 0.014]].forEach(([m, a]) => {
+      const o = ctx.createOscillator(); o.type = 'sine';
+      o.frequency.value = 116 * m * (1 + (Math.random() - 0.5) * 0.004);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(a, t + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 4.5 + m * 0.4);
+      o.connect(g); g.connect(p.in);
+      o.start(t); o.stop(t + 6);
+    });
+    // the strike transient
+    const s = noiseSource(false);
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 1.2;
+    const sg = ctx.createGain();
+    sg.gain.setValueAtTime(0.08, t);
+    sg.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+    s.connect(bp); bp.connect(sg); sg.connect(p.in);
+  }
+
+  // a music box winding through a few notes of a lullaby, slowing as it dies
+  function musicBox(pos) {
+    if (!ctx) return;
+    const p = panFor(pos);
+    const notes = [659, 587, 523, 659, 587, 523, 440, 523, 494, 392];   // a thin minor tumble
+    let dt2 = 0;
+    notes.forEach((f, i) => {
+      dt2 += 0.34 + i * 0.055;                                          // the spring runs down
+      const t = now() + dt2;
+      const o = ctx.createOscillator(); o.type = 'sine';
+      const o2 = ctx.createOscillator(); o2.type = 'triangle';
+      o.frequency.value = f; o2.frequency.value = f * 2.01;
+      const g = ctx.createGain();
+      const a = 0.045 * (1 - i / notes.length * 0.6);                   // fading
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.linearRampToValueAtTime(a, t + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+      const g2 = ctx.createGain(); g2.gain.value = 0.3;
+      o.connect(g); o2.connect(g2); g2.connect(g); g.connect(p.in);
+      o.start(t); o.stop(t + 1.6); o2.start(t); o2.stop(t + 1.6);
+    });
   }
 
   function setTension(v) { targetTension = Math.max(0, Math.min(1, v)); }
@@ -910,7 +952,7 @@ export const Audio = (() => {
   return {
     init, unlock, start, update, setZone, setTension, bumpHeart, bumpBreath,
     creak, drip, whisper, moan, distantScream, footstep, rustle, flutter,
-    skitter, eyeGlimpse, shadowShift, mirrorSting, slam, doorCreak, lockedDoor,
+    skitter, eyeGlimpse, shadowShift, mirrorSting, slam, doorCreak, lockedDoor, bell, musicBox,
     stinger, crescendo, stopCrescendo, duck, setMuffle, hush, fadeOut, fadeIn, resetMix,
     get context() { return ctx; },
     get tension() { return tension; },

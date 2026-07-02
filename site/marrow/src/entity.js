@@ -6,6 +6,8 @@ import * as THREE from 'three';
 // twitches like bad stop-motion and its eyes are too bright. It is mostly
 // silhouette; the flashlight reveals the wet pale flesh and the maw.
 
+const _navDir = { x: 0, z: 0 };   // scratch for NavGrid.dirFrom
+
 // push vertices around by cheap trig noise so nothing reads as a clean primitive
 function malform(geo, amp, seed = 1) {
   const p = geo.attributes.position;
@@ -55,6 +57,11 @@ export class Entity {
     this._vanishDur = 0.32;
     this._hasSkittered = false;
     this.crawlMove = false;
+    this.nav = null;            // NavGrid, set per level — chase flows around walls
+    this.groundAt = null;       // (x,z)=>y, set per level — it climbs stairs too
+    this._eruptT = 0;           // seconds left of clawing up out of the ground
+    this._eruptDur = 0.85;
+    this.stalkRange = 10;       // 'stalk' mode keeps this ring around the player
   }
 
   _build() {
@@ -246,10 +253,16 @@ export class Entity {
     this._twitch.set(0, 0, 0);
     this._stepT = 0;
     this.dwell = opts.dwell ?? (mode === 'guard' ? 9999 : 0.55);
-    this.speed = opts.speed ?? (mode === 'chase' ? 3.7 : mode === 'approach' ? 0.85 : 0);
+    this.speed = opts.speed ?? (mode === 'chase' ? 3.7 : mode === 'approach' ? 0.85 : mode === 'stalk' ? 1.6 : 0);
     this.crawlMove = opts.crawl === true || mode === 'chase' || (mode === 'cross' && this.speed > 5.0);
+    this.stalkRange = opts.range ?? 10;
+    // clawing up out of the earth — used for grave scares. It rises where it
+    // stands, so spawn it ON the mound, not walking to one.
+    if (opts.erupt) { this._eruptDur = opts.eruptDur ?? 0.85; this._eruptT = this._eruptDur; }
+    else this._eruptT = 0;
     this.hold = opts.hold === true;     // a starer that vanishes when you look away, not when you look at it
     this._seen = false;
+    this._stalkSide = 0; this._stalkT = 0;
     this._wetStep = opts.wet !== false; // footstep surface for chase/hunt
     this.target.copy(this.pos);
     if (opts.target) this.target.set(opts.target.x, 0, opts.target.z);
@@ -343,7 +356,30 @@ export class Entity {
     if (watched) this.observedTime += dt; else this.observedTime = Math.max(0, this.observedTime - dt * 2);
 
     const crawl = this.crawlMove;
-    let baseY = Math.sin(this.phase * 1.7) * 0.01 - (crawl ? 0.18 : 0);
+    const groundY = this.groundAt ? this.groundAt(this.pos.x, this.pos.z) : 0;
+    let baseY = groundY + Math.sin(this.phase * 1.7) * 0.01 - (crawl ? 0.18 : 0);
+
+    // --- clawing up out of the ground: it rises where it stands, convulsing ---
+    if (this._eruptT > 0) {
+      this._eruptT -= dt;
+      const k = 1 - Math.max(0, this._eruptT / this._eruptDur);   // 0 -> 1 risen
+      this.faceToward(player.pos.x, player.pos.z);
+      const jit = 0.05 * (1 - k) + 0.015;
+      this.group.position.set(
+        this.pos.x + (Math.random() - 0.5) * jit,
+        groundY - 1.7 * (1 - k) * (1 - k),
+        this.pos.z + (Math.random() - 0.5) * jit,
+      );
+      this.group.scale.set(1, 0.3 + k * 0.7, 1);
+      this.phase += dt * 2.5;                                     // limbs scrabble
+      this._stride(dt, 3.2, true);
+      if (this.head) this.head.rotation.z = Math.sin(this.phase * 21) * 0.4 * (1 - k);
+      if (this.jaw) this.jaw.rotation.x = 0.4 + k * 0.6;
+      this.mawMat.emissiveIntensity = 0.6 + k * 0.9;
+      this.eyeMat.emissiveIntensity = 1.2 + k * 1.6;
+      if (this.eyeLight) this.eyeLight.intensity = 0.15 + k * 0.4;
+      return;
+    }
 
     if (this.mode === 'idle') {
       this.faceToward(player.pos.x, player.pos.z);
@@ -379,11 +415,21 @@ export class Entity {
         this._stride(dt, crawl ? 3.5 : (this.speed > 4 ? 2.8 : 1.4), crawl);
       }
     } else if (this.mode === 'chase') {
-      this.faceToward(player.pos.x, player.pos.z);
-      let nx = this.pos.x + (dx / (dist || 1)) * this.speed * dt;
-      let nz = this.pos.z + (dz / (dist || 1)) * this.speed * dt;
-      if (field) { const r = field.resolve(nx, nz, 0.42); nx = r.x; nz = r.z; }   // wider clearance so it doesn't embed in walls
+      // Steer along the nav flow when a wall separates us — it rounds doorways
+      // and corners like something that knows the building. Straight-line only
+      // when the way is genuinely clear.
+      let sx = dx / (dist || 1), sz = dz / (dist || 1);
+      const clearLOS = !field || field.segmentClear(this.pos.x, this.pos.z, player.pos.x, player.pos.z);
+      if (!clearLOS && this.nav && this.nav.dirFrom(this.pos.x, this.pos.z, _navDir)) {
+        sx = _navDir.x; sz = _navDir.z;
+      }
+      let nx = this.pos.x + sx * this.speed * dt;
+      let nz = this.pos.z + sz * this.speed * dt;
+      if (field) { const r = field.resolve(nx, nz, 0.42); nx = r.x; nz = r.z; }   // safety only — nav keeps it out of walls
       this.pos.set(nx, 0, nz);
+      // face where it's going; lock onto you once it can see you
+      if (clearLOS || dist < 4) this.faceToward(player.pos.x, player.pos.z);
+      else if (Math.abs(sx) + Math.abs(sz) > 0.01) this.faceToward(this.pos.x + sx, this.pos.z + sz);
       this._stride(dt, this.speed > 2.6 ? 3.2 : 1.7, true);
       // footstep cadence tracks how fast it's moving — a slow stalk plods, a
       // committed chase pounds. This is the sound that tells you it's coming.
@@ -393,10 +439,33 @@ export class Entity {
       if (dist < 1.0 && this.onReach) { this.onReach(); this.hardHide(); }   // hard-cut behind the caught-blink
     } else if (this.mode === 'guard') {
       this.faceToward(player.pos.x, player.pos.z);
+    } else if (this.mode === 'stalk') {
+      // It paces you from the dark — holding its ring, drifting sideways so it
+      // slides between the trees, always facing you. It freezes when watched.
+      // Close the gap and it melts away; it is never the one that blinks first.
+      this.faceToward(player.pos.x, player.pos.z);
+      if (dist < 5.5) { this.despawn(audio); return; }
+      if (!watched) {
+        const toRing = (dist - this.stalkRange) / this.stalkRange;   // + = too far
+        const rx = dx / (dist || 1), rz = dz / (dist || 1);
+        const side = this._stalkSide || (this._stalkSide = Math.random() < 0.5 ? -1 : 1);
+        let mx = rx * toRing * 1.6 + (-rz) * side * 0.85;
+        let mz = rz * toRing * 1.6 + (rx) * side * 0.85;
+        const ml = Math.hypot(mx, mz) || 1;
+        let nx = this.pos.x + (mx / ml) * this.speed * dt;
+        let nz = this.pos.z + (mz / ml) * this.speed * dt;
+        if (field) { const r = field.resolve(nx, nz, 0.42); nx = r.x; nz = r.z; }
+        this.pos.set(nx, 0, nz);
+        this._stride(dt, 1.1, false);
+        this._stalkT = (this._stalkT || 0) + dt;
+        if (this._stalkT > 4 + Math.random() * 3) { this._stalkT = 0; this._stalkSide *= -1; }
+      }
+      if (this.lifetime > (this.dwell > 100 ? this.dwell : 16)) this.despawn(audio, true);
     }
 
     // --- the wrongness: head twitch, gaping jaw, glowing maw, stop-motion jitter ---
     const aggro = (this.mode === 'guard' || this.mode === 'chase') ? 1
+                : this.mode === 'stalk' ? 0.25 + (watched ? 0.2 : 0)
                 : THREE.MathUtils.clamp(1 - dist / 7, 0, 1) + (watched ? 0.3 : 0);
     const ag = THREE.MathUtils.clamp(aggro, 0, 1);
     const crawlK = crawl ? 1 : 0;

@@ -107,6 +107,24 @@ export class ColliderField {
     }
     return { x: px, z: pz, hit, tag };
   }
+  // read-only: would a circle at (x,z,r) overlap any STATIC collider? Used by
+  // the nav grid bake (dynamic boxes/doors are tested live at flood time).
+  overlapsStatic(x, z, r) {
+    const cands = this._near(x, z, r + 0.5);
+    for (const v of cands) {
+      const type = v >>> 24, idx = v & 0xFFFFFF;
+      if (type === 0) {
+        const cc = this.circles[idx];
+        if (Math.hypot(x - cc.x, z - cc.z) < r + cc.r) return true;
+      } else {
+        const b = this.boxes[idx];
+        const cx = Math.max(b.minx, Math.min(x, b.maxx));
+        const cz = Math.max(b.minz, Math.min(z, b.maxz));
+        if (Math.hypot(x - cx, z - cz) < r) return true;
+      }
+    }
+    return false;
+  }
   // is the straight segment from (x0,z0) to (x1,z1) clear of boxes? (sight/AI)
   segmentClear(x0, z0, x1, z1) {
     const steps = Math.ceil(Math.hypot(x1 - x0, z1 - z0) / (this.cell * 0.5));

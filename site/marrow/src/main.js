@@ -1,22 +1,18 @@
 import * as THREE from 'three';
-import { Quality, CFG, IS_TOUCH } from './config.js?v=distinct-mazes';
+import { Quality, CFG, IS_TOUCH } from './config.js?v=three-acts';
 import { setTextureRenderer, softDot } from './textures.js';
-import { Audio } from './audio.js?v=distinct-mazes';
+import { Audio } from './audio.js?v=three-acts';
 import { UI } from './ui.js';
 import { createControls } from './controls.js';
-import { Player } from './player.js?v=distinct-mazes';
+import { Player } from './player.js?v=three-acts';
 import { Post } from './post.js';
-import { Director } from './scares.js?v=distinct-mazes';
+import { Director } from './scares.js?v=three-acts';
 import { InteractionManager } from './interaction.js';
 import { flickerFlames } from './world/props.js';
 import { buildForest } from './world/forest.js';
-import { buildMansion } from './world/mansion.js';
-import { buildBasement } from './world/basement.js';
-import {
-  buildConservatory, buildLibrary, buildNursery,
-  buildBathhouse, buildGallery, buildChapel,
-} from './world/deepLevels.js';
-import { buildFinal } from './world/final.js';
+import { buildHouse } from './world/house.js';
+import { buildGraveyard } from './world/graveyard.js';
+import { buildCrypt } from './world/crypt.js';
 
 const canvas = document.getElementById('game');
 
@@ -89,15 +85,9 @@ ctx.director = director;
 
 const builders = {
   forest: buildForest,
-  mansion: buildMansion,
-  basement: buildBasement,
-  conservatory: buildConservatory,
-  library: buildLibrary,
-  nursery: buildNursery,
-  bathhouse: buildBathhouse,
-  gallery: buildGallery,
-  chapel: buildChapel,
-  final: buildFinal,
+  house: buildHouse,
+  graveyard: buildGraveyard,
+  crypt: buildCrypt,
 };
 
 // --- floating dust motes that drift through the torch beam (interiors) ---
@@ -157,10 +147,12 @@ function loadLevel(name, opts = {}) {
   ambient.intensity = level.ambient.intensity;
 
   player.field = level.field;
+  player.groundAt = level.groundAt || null;   // stairs/landings, or flat
   player.teleport(level.spawn.x, level.spawn.z, level.spawn.yaw);
   player.pitch = 0; player.speedScale = 1; player.frozen = false; player.flashOn = true; player.crawl = false; player.releaseLook();
 
   director.setField(level.field);
+  director.setNav(level.nav || null, level.groundAt || null);   // the hunt's map of this place
   director.reset();
   director.enterZone(name);        // dread logic must know the real current zone
   interaction.setLevel(ctx.interactables);
@@ -380,9 +372,8 @@ function playerFeedback(info, dt) {
   const zone = currentLevel ? currentLevel.name : 'forest';
   const surface = currentLevel && currentLevel.surface
     ? currentLevel.surface
-    : zone === 'forest'
-      ? 'leaf'
-      : (zone === 'basement' || zone === 'bathhouse' || zone === 'chapel' || zone === 'final') ? 'wet' : 'dry';
+    : zone === 'forest' || zone === 'graveyard' ? 'leaf'
+      : zone === 'crypt' ? 'wet' : 'dry';
   if (info.moving && info.horizSpeed > 0.5) {
     stepDist += info.horizSpeed * dt;        // cadence by distance travelled
     const stride = info.running ? 1.5 : 2.0;

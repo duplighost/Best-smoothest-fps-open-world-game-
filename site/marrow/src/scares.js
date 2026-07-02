@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Entity } from './entity.js';
-import { Audio } from './audio.js?v=distinct-mazes';
+import { Audio } from './audio.js?v=three-acts';
 const REDUCED_MOTION = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // The Director decides when to frighten you. It owns the Presence, runs the
@@ -52,12 +52,35 @@ export class Director {
   }
   _clearTimers() { for (const id of this._timers) clearTimeout(id); this._timers.clear(); }
   _canLoud() { return this._nowS() - this.lastLoud > this.LOUD_GAP && Audio.tension > 0.4; }
-  _wet() { return this.zone === 'basement' || this.zone === 'bathhouse' || this.zone === 'chapel' || this.zone === 'final'; }   // wet footsteps below ground
+  _wet() { return this.zone === 'crypt'; }   // wet footsteps below ground
 
   // called by main on every level load so dread logic knows where you are
   enterZone(name) { this.zone = name; }
 
   setField(f) { this.field = f; }
+  // per-level navigation for the hunt; also hands the entity the ground-height
+  // function so it climbs the same stairs you do
+  setNav(nav, groundAt = null) {
+    this.nav = nav;
+    this.entity.nav = nav;
+    this.entity.groundAt = groundAt;
+    this._navT = 0;
+    this._wallsBusy = false;
+  }
+
+  // The player was moved by a stair/floor swap. A mid-hunt swap would strand
+  // the hunter in the other half of the house; it knows the house better than
+  // that — quietly restage it out of sight near your new position.
+  onPlayerRelocated() {
+    if (this._hunting && this.entity.isVisible) {
+      this.entity.hardHide();
+      this._repositionHunter(9);
+      this.entity.spawnAt(this.entity.pos.x, this.entity.pos.z, this.player.pos.x, this.player.pos.z, 'chase', {
+        speed: this.entity.speed || 2, wet: this._wet(), onReach: () => this._caughtByHunter(),
+      });
+      this._huntStuckT = 0; this._huntBestD = this.entity.distanceTo(this.player.pos);
+    }
+  }
 
   // Full reset for a clean replay — clears the Presence, every timer, and any
   // leftover player state (frozen / forced-look / dimmed torch). The zone is set
@@ -69,6 +92,8 @@ export class Director {
     this._plunging = false;
     this._sentinel = null;
     this._hunting = false;
+    this._huntArmed = false;
+    this._wallsBusy = false;
     this._huntTimer = 14 + Math.random() * 8;
     this._huntLost = 0;
     this.ended = false;
@@ -87,8 +112,8 @@ export class Director {
 
   // a key was taken — nudge the tension up for the next leg of the descent
   setObjective(name) {
-    if (name === 'mansion') Audio.setTension(0.35);
-    if (name === 'basement') Audio.setTension(0.6);
+    if (name === 'house') Audio.setTension(0.35);
+    if (name === 'graveyard') Audio.setTension(0.6);
   }
 
   // ---- entity placement primitives (called by level triggers) --------------
@@ -164,7 +189,7 @@ export class Director {
     const ex = cx + Math.sin(fwd - side * Math.PI / 2) * width;
     const ez = cz + Math.cos(fwd - side * Math.PI / 2) * width;
     this.entity.spawnAt(sx, sz, ex, ez, 'cross', { speed: 6.8, target: { x: ex, z: ez }, crawl: true });
-    Audio.skitter(new THREE.Vector3(cx, 1, cz), this.zone === 'forest' || this.zone === 'conservatory' ? 'leaf' : this._wet() ? 'wet' : 'dry');
+    Audio.skitter(new THREE.Vector3(cx, 1, cz), this.zone === 'forest' || this.zone === 'graveyard' ? 'leaf' : this._wet() ? 'wet' : 'dry');
     Audio.bumpHeart(0.55, 96);
     this._torchStutter();
     return true;
@@ -332,18 +357,17 @@ export class Director {
   // catches sight of you, and if it reaches you it HAS you. This is the fear the
   // whole game hangs on; it grows the deeper you go.
   _huntIntensity() {
-    // The forest is the quiet opening — it establishes the dread before the
-    // predator arrives. From the house on, something is hunting you, and it gets
-    // worse the deeper you go. (The basement keeps its own scripted chase.)
-    return {
-      mansion: 0.30,
-      conservatory: 0.40, library: 0.48, nursery: 0.58,
-      bathhouse: 0.68, gallery: 0.80, chapel: 0.92,
-    }[this.zone] || 0;
+    // The forest is the quiet opening — it watches you there but never hunts.
+    // The house hunt only wakes once you've taken the brass key (the level arms
+    // it via ctx.director.armHunt()); the graveyard hunts from the gate.
+    if (this.zone === 'house') return this._huntArmed ? 0.45 : 0;
+    if (this.zone === 'graveyard') return 0.72;
+    return 0;
   }
+  armHunt(delay = 6) { this._huntArmed = true; this._huntTimer = Math.min(this._huntTimer, delay); }
   _updateHunt(dt) {
     const intensity = this._huntIntensity();
-    if (intensity <= 0 || this.ended || this._plunging) return;
+    if (intensity <= 0 || this.ended || this._plunging || this._wallsBusy) return;
     const e = this.entity;
 
     if (!this._hunting) {
@@ -355,6 +379,10 @@ export class Director {
 
     // a hunt is live. If a scripted beat or the guardian stole the entity, end it.
     if (!e.isVisible || e.mode !== 'chase') { this._endHunt(); return; }
+
+    // keep the flow field fresh so the chase rounds corners instead of grinding
+    this._navT -= dt;
+    if (this.nav && this._navT <= 0) { this._navT = 0.3; this.nav.flood(this.player.pos.x, this.player.pos.z); }
 
     const d = e.distanceTo(this.player.pos);
     const near = THREE.MathUtils.clamp(1 - d / 15, 0, 1);
@@ -377,13 +405,19 @@ export class Director {
     const sees = e.observedTime > 0.04 || d < 3.5;
     e.speed = (sees && d < 9) ? (3.3 + intensity * 1.4) : (1.4 + intensity * 0.8);
 
-    // If maze walls stall it (no pathfinding, it just slides), and you can't see
-    // it, it "finds another way in" FAST — relocate closer, behind you, out of
-    // sight — so it isn't left grinding into a wall. Quick, so the clipping the
-    // user saw is at most a brief glimpse, not its whole behaviour.
-    if (d < this._huntLastD - 0.12) this._huntStuckT = 0; else this._huntStuckT += dt;
-    this._huntLastD = d;
-    if (this._huntStuckT > 1.6 && !sees && d > 3.5) { this._repositionHunter(7.5); this._huntStuckT = 0; }
+    // With the nav flow it should never truly stall — but if it does (a pocket
+    // the grid can't reach, a door shut in its face), it stops pretending to be
+    // solid. Unseen: it just "finds another way in" (silent relocate). SEEN: it
+    // sinks into the floor in front of you, and then the knocking starts —
+    // travelling through the walls around you — until it comes back out.
+    // Progress is measured against its BEST approach so far: a body jittering
+    // against a corner (forward, pushed out, forward...) cannot fool the clock.
+    if (d < this._huntBestD - 0.12) { this._huntBestD = d; this._huntStuckT = 0; }
+    else this._huntStuckT += dt;
+    if (this._huntStuckT > 1.6 && !sees && d > 3.5) { this._repositionHunter(7.5); this._huntStuckT = 0; this._huntBestD = this.entity.distanceTo(this.player.pos); }
+    else if (this._huntStuckT > 2.6 && d > 3.5 && d < 14) { this._wallsTravel(); return; }   // <14: genuinely blocked, not just outrun
+    // if the player runs AWAY, best-approach must follow them back out
+    this._huntBestD = Math.min(this._huntBestD + dt * 1.2, Math.max(this._huntBestD, d));
 
     // put real distance between you and it loses you — a held breath of relief
     if (d > 22) { this._huntLost += dt; if (this._huntLost > 3.2) { Audio.hush(1.3); this._endHunt(); } }
@@ -393,10 +427,16 @@ export class Director {
     const p = this.player;
     let sx = p.pos.x - p.forward.x * dist, sz = p.pos.z - p.forward.z * dist;
     if (this.field && !this.field.segmentClear(p.pos.x, p.pos.z, sx, sz)) {
-      for (let a = 0; a < 7; a++) {
+      let found = false;
+      if (this.nav) {
+        this.nav.flood(p.pos.x, p.pos.z);
+        const spot = this.nav.randomReachedNear(8, 18);
+        if (spot) { sx = spot.x; sz = spot.z; found = true; }
+      }
+      for (let a = 0; a < 7 && !found; a++) {
         const ang = Math.random() * Math.PI * 2, dd = dist * 0.85 + Math.random() * 3;
         const tx = p.pos.x + Math.cos(ang) * dd, tz = p.pos.z + Math.sin(ang) * dd;
-        if (this.field.segmentClear(p.pos.x, p.pos.z, tx, tz)) { sx = tx; sz = tz; break; }
+        if (this.field.segmentClear(p.pos.x, p.pos.z, tx, tz)) { sx = tx; sz = tz; found = true; }
       }
     }
     this.entity.pos.set(sx, 0, sz);
@@ -407,18 +447,31 @@ export class Director {
     let sx = p.pos.x - p.forward.x * 13, sz = p.pos.z - p.forward.z * 13;   // from behind, in the dark
     if (this.field && !this.field.segmentClear(p.pos.x, p.pos.z, sx, sz)) {
       let found = false;
-      for (let a = 0; a < 7; a++) {
+      // The nav grid knows every spot it could genuinely have WALKED to — pick
+      // one a couple of rooms away, preferring somewhere you can't see. (The
+      // old line-of-sight-only picker deadlocked in closed rooms: nowhere clear
+      // within 14m, so the hunt never started.)
+      if (this.nav) {
+        this.nav.flood(p.pos.x, p.pos.z);
+        for (let a = 0; a < 6 && !found; a++) {
+          const spot = this.nav.randomReachedNear(12, 26);
+          if (!spot) break;
+          sx = spot.x; sz = spot.z; found = true;
+          if (this.field.segmentClear(p.pos.x, p.pos.z, sx, sz) && a < 5) found = false;   // visible — keep looking
+        }
+      }
+      for (let a = 0; a < 7 && !found; a++) {
         const ang = Math.random() * Math.PI * 2, dd = 10 + Math.random() * 4;
         const tx = p.pos.x + Math.cos(ang) * dd, tz = p.pos.z + Math.sin(ang) * dd;
-        if (this.field.segmentClear(p.pos.x, p.pos.z, tx, tz)) { sx = tx; sz = tz; found = true; break; }
+        if (this.field.segmentClear(p.pos.x, p.pos.z, tx, tz)) { sx = tx; sz = tz; found = true; }
       }
-      if (!found) { this._huntTimer = 4; return; }    // nowhere clear — try again soon
+      if (!found) { this._huntTimer = 4; return; }    // nowhere at all — try again soon
     }
     this.entity.spawnAt(sx, sz, p.pos.x, p.pos.z, 'chase', {
       speed: 1.4 + intensity * 0.8, wet: this._wet(), onReach: () => this._caughtByHunter(),
     });
     this._hunting = true; this._huntLost = 0;
-    this._huntLastD = Math.hypot(sx - p.pos.x, sz - p.pos.z); this._huntStuckT = 0; this._huntSoundT = 1.6;
+    this._huntBestD = Math.hypot(sx - p.pos.x, sz - p.pos.z); this._huntStuckT = 0; this._huntSoundT = 1.6;
     Audio.hush(0.7);                          // a beat of silence — then you hear it move
     Audio.distantScream(this._near(22, 2));   // something woke up, somewhere back there
   }
@@ -427,6 +480,81 @@ export class Director {
     this._hunting = false; this._huntLost = 0;
     const intensity = this._huntIntensity() || 0.4;
     this._huntTimer = (20 - intensity * 11) + Math.random() * (16 - intensity * 9);   // cooldown, shorter when deeper
+  }
+
+  // --- the walls beat: what used to be the stuck-in-geometry glitch, made into
+  // the scariest thing it does. It folds down THROUGH the floor while you watch,
+  // then something knocks its way through the walls AROUND you — each hit from a
+  // new bearing, closing in — and it claws back out of the ground far too close.
+  _wallsTravel() {
+    if (this._wallsBusy || this.ended) return;
+    this._wallsBusy = true;
+    this._huntStuckT = 0;
+    const e = this.entity, p = this.player;
+    e.observedTime = Math.max(e.observedTime, 0.1);   // force the watched fold-down, never a pop
+    e.despawn(Audio);
+    Audio.hush(0.9);
+    Audio.bumpHeart(0.6, 100);
+    const knocks = 4 + (Math.random() * 3 | 0);
+    let ang = Math.atan2(e.pos.x - p.pos.x, e.pos.z - p.pos.z);   // start where it went down
+    let gap = 620;
+    const knock = (i) => {
+      if (this.ended) { this._wallsBusy = false; return; }
+      ang += (Math.random() < 0.5 ? 1 : -1) * (0.9 + Math.random() * 1.1);
+      const d = 5.5 - (i / knocks) * 3.2;                          // each hit nearer
+      Audio.slam(new THREE.Vector3(p.pos.x + Math.sin(ang) * d, 1.2 + Math.random() * 0.8, p.pos.z + Math.cos(ang) * d));
+      Audio.bumpHeart(0.3 + i * 0.08, 88 + i * 8);
+      this.ctx.post.kick('pulse', 0.18 + i * 0.05);
+      if (i < knocks) { gap *= 0.86; this._after(() => knock(i + 1), gap); }
+      else this._after(() => emerge(), 700 + Math.random() * 500);
+    };
+    const emerge = () => {
+      this._wallsBusy = false;
+      if (this.ended || this._sentinel) return;
+      // somewhere it could genuinely have walked to, out of the wall's line
+      let spot = this.nav && this.nav.randomReachedNear(5, 14);
+      if (!spot) { const a = p.yaw + Math.PI + (Math.random() - 0.5) * 1.4; spot = { x: p.pos.x + Math.sin(a) * 5, z: p.pos.z + Math.cos(a) * 5 }; }
+      this.stinger('growl');
+      this.entity.spawnAt(spot.x, spot.z, p.pos.x, p.pos.z, 'chase', {
+        speed: 2.4, wet: this._wet(), erupt: true, onReach: () => this._caughtByHunter(),
+      });
+      this._hunting = true; this._huntLost = 0;
+      this._huntBestD = this.entity.distanceTo(p.pos); this._huntStuckT = -1.2;   // grace while it claws out
+    };
+    this._after(() => knock(0), 900);
+  }
+
+  // ---- act-specific placements ---------------------------------------------
+  // Forest: it paces you in the tree line — glimpsed between trunks, gone when
+  // you walk at it. The opening act's whole creature language.
+  parallelShadow() {
+    if (this.entity.isVisible || this.ended) return false;
+    const p = this.player;
+    const fwd = p.yaw + Math.PI;
+    const side = Math.random() < 0.5 ? 1 : -1;
+    const a = fwd + side * (0.9 + Math.random() * 0.35);           // off your shoulder
+    const d = 9 + Math.random() * 4;
+    const x = p.pos.x + Math.sin(a) * d, z = p.pos.z + Math.cos(a) * d;
+    this.entity.spawnAt(x, z, p.pos.x, p.pos.z, 'stalk', { range: d, dwell: 14 });
+    Audio.rustle(new THREE.Vector3(x, 0.4, z));
+    Audio.bumpHeart(0.3, 82);
+    return true;
+  }
+
+  // Graveyard: the soil right there heaves and it claws up out of a grave.
+  graveErupt(x, z, opts = {}) {
+    if (this.ended) return false;
+    if (this.entity.isVisible) this.entity.hardHide();
+    Audio.slam(new THREE.Vector3(x, 0.2, z));
+    this.entity.spawnAt(x, z, this.player.pos.x, this.player.pos.z, opts.mode ?? 'idle', {
+      erupt: true, dwell: opts.dwell ?? 1.6, hold: false,
+      speed: opts.speed, wet: false,
+      onReach: opts.mode === 'chase' ? () => this._caughtByHunter() : null,
+    });
+    this.stinger(opts.quiet ? 'breath' : 'growl');
+    this.ctx.ui.buzz([40, 30, 90]);
+    if (opts.mode === 'chase') { this._hunting = true; this._huntLost = 0; this._huntBestD = this.entity.distanceTo(this.player.pos); this._huntStuckT = -1.5; }
+    return true;
   }
   // IT HAS YOU. Not a death — a violation, then it throws you down and recedes,
   // and your light is gone for a moment in the dark where it just was.
@@ -478,8 +606,8 @@ export class Director {
     Audio.setTension(Math.min(1, Audio.tension + 0.25));
   }
 
-  basementKeyScare(pos) {
-    // the lights die, a breath, then the house exhales something at you
+  keyDarkScare(pos) {
+    // the lights die, a breath, then the dark exhales something at you
     this.player.flashOn = false;
     this.ctx.ui.flashWhite(0.2, 120);
     Audio.stinger('breath');
@@ -737,11 +865,7 @@ export class Director {
   }
 
   _zoneFloor() {
-    return {
-      forest: 0.12, mansion: 0.24, basement: 0.40,
-      conservatory: 0.34, library: 0.42, nursery: 0.48,
-      bathhouse: 0.54, gallery: 0.58, chapel: 0.66, final: 0.74,
-    }[this.zone] ?? 0.34;
+    return { forest: 0.12, house: 0.28, graveyard: 0.52, crypt: 0.74 }[this.zone] ?? 0.3;
   }
 
   _behind(dist = 3) {
@@ -834,7 +958,7 @@ export class Director {
   _softBeat(t) {
     const wet = this._wet();
     const zone = this.zone;
-    const leaf = zone === 'forest' || zone === 'conservatory';
+    const leaf = zone === 'forest' || zone === 'graveyard';
     const opts = [
       [3, () => Audio.whisper(this._behind())],
       [2, () => Audio.creak(this._near(10))],
@@ -850,11 +974,12 @@ export class Director {
       [0.9 + t * 2.0, () => this._wallHit()],
       [0.5 + t * 1.6, () => this._falseBlink()],
       [1 + t * 1.5, () => { if (t > 0.3) this._torchStutter(); }],
-      // --- per-zone signature so each level's ambient dread sounds its own way ---
+      // --- per-zone signature so each act's ambient dread sounds its own way ---
       [leaf ? 2.6 : 0, () => Audio.rustle(this._near(7))],                                  // leaves shifting nearby
-      [(zone === 'library' || zone === 'gallery') ? 2.2 : 0, () => Audio.creak(this._near(8))], // settling wood / frames
-      [zone === 'nursery' ? 1.4 + t * 1.6 : 0, () => Audio.moan(this._near(10, 1.3))],      // a small voice
-      [(zone === 'chapel' || zone === 'final') ? 1.6 + t * 2.6 : 0, () => Audio.distantScream(this._near(18, 2))],
+      [zone === 'house' ? 2.4 : 0, () => Audio.creak(this._near(8))],                       // the house settling around you
+      [zone === 'crypt' ? 1.6 + t * 2.6 : 0, () => Audio.distantScream(this._near(18, 2))],
+      // the pacing shadow in the trees / between the stones — the act-one language
+      [(zone === 'forest' ? 1.5 : zone === 'graveyard' ? 0.9 : 0) + (leaf ? t * 1.2 : 0), () => this.parallelShadow()],
     ];
     const total = opts.reduce((s, o) => s + o[0], 0);
     let r = Math.random() * total;

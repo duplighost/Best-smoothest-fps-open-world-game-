@@ -59,7 +59,7 @@ function buildEye() {
   return g;
 }
 
-export function buildFinal(ctx) {
+export function buildCrypt(ctx) {
   const group = new THREE.Group();
   const field = new ColliderField(4);
 
@@ -192,7 +192,7 @@ export function buildFinal(ctx) {
   eye.userData.memoryLights = memoryLights;
   eye.userData.endBloom = 0;
 
-  const zc = CFG.zones.final;
+  const zc = CFG.zones.crypt;
   let crescendoFired = false;
   let midBeatFired = false;
 
@@ -277,7 +277,7 @@ export function buildFinal(ctx) {
   }
 
   return {
-    name: 'final', group, field, flames: [],
+    name: 'crypt', group, field, flames: [],
     spawn: { x: 0, z: 5.2, yaw: 0 },       // facing -Z, through the antechamber toward the eye
     fog: { color: zc.fog, density: zc.fogDensity },
     ambient: { color: zc.ambient, intensity: zc.ambientI },
