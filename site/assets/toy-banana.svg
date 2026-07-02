@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">The Screaming Banana Dilemma</title>
+  <desc id="desc">A strange yellow banana glowing at the end of a polished hallway.</desc>
+  <defs>
+    <linearGradient id="hall" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#17131f"/>
+      <stop offset=".5" stop-color="#3b2631"/>
+      <stop offset="1" stop-color="#08070d"/>
+    </linearGradient>
+    <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#72534c"/>
+      <stop offset=".45" stop-color="#4a3438"/>
+      <stop offset="1" stop-color="#1a151d"/>
+    </linearGradient>
+    <radialGradient id="bananaGlow" cx="55%" cy="48%" r="38%">
+      <stop offset="0" stop-color="#ffe979" stop-opacity=".9"/>
+      <stop offset=".35" stop-color="#ffca35" stop-opacity=".32"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur" x="-35%" y="-35%" width="170%" height="170%"><feGaussianBlur stdDeviation="14"/></filter>
+  </defs>
+  <rect width="1200" height="720" fill="url(#hall)"/>
+  <polygon points="0,68 498,244 498,544 0,704" fill="url(#wall)"/>
+  <polygon points="1200,82 702,244 702,544 1200,704" fill="url(#wall)"/>
+  <polygon points="498,244 702,244 702,544 498,544" fill="#15111a"/>
+  <polygon points="0,704 498,544 702,544 1200,704" fill="#0b0a10"/>
+  <polygon points="0,68 498,244 702,244 1200,82 1200,0 0,0" fill="#201723"/>
+  <g opacity=".42" stroke="#d0a682" stroke-width="4" fill="none">
+    <path d="M92 132 L420 260 V526 L92 640Z"/>
+    <path d="M212 174 L448 270 V516 L212 602Z" opacity=".5"/>
+    <path d="M1108 142 L780 260 V526 L1108 640Z"/>
+    <path d="M988 180 L752 270 V516 L988 602Z" opacity=".5"/>
+    <path d="M0 452 L500 430 M700 430 L1200 452"/>
+    <path d="M0 585 L500 500 M700 500 L1200 585"/>
+  </g>
+  <g fill="#251b22" opacity=".9">
+    <rect x="154" y="246" width="94" height="126" rx="8" transform="skewY(16)"/>
+    <rect x="946" y="250" width="94" height="126" rx="8" transform="skewY(-16)"/>
+  </g>
+  <rect x="534" y="286" width="132" height="178" rx="8" fill="#2b1d1f" stroke="#d9ac78" stroke-width="6" opacity=".92"/>
+  <path d="M575 320 C590 386 622 422 661 426" fill="none" stroke="#ffd94d" stroke-width="34" stroke-linecap="round"/>
+  <path d="M571 313 C602 326 638 326 665 306" fill="none" stroke="#754417" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="640" cy="388" r="6" fill="#3b1f11"/>
+  <path d="M581 384 C600 397 623 401 646 390" fill="none" stroke="#3b1f11" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="600" cy="386" r="5" fill="#3b1f11"/>
+  <ellipse cx="614" cy="384" rx="250" ry="170" fill="url(#bananaGlow)" filter="url(#blur)"/>
+  <g fill="#ffe28a" opacity=".72">
+    <circle cx="160" cy="178" r="4"/><circle cx="1038" cy="190" r="4"/><circle cx="510" cy="238" r="3"/><circle cx="690" cy="238" r="3"/>
+  </g>
+  <path d="M382 606 C494 570 690 570 814 606" fill="none" stroke="#ffce56" stroke-width="5" opacity=".24"/>
+</svg>

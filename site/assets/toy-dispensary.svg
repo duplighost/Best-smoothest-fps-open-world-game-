@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="-10%" r="110%">
+      <stop offset="0%" stop-color="#15453A"/>
+      <stop offset="55%" stop-color="#11382F"/>
+      <stop offset="100%" stop-color="#0B2620"/>
+    </radialGradient>
+    <linearGradient id="capsuleGloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="40%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+    <filter id="softSm" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#000000" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="800" fill="url(#bg)"/>
+
+  <!-- ambient floating pills -->
+  <g>
+    <circle cx="120" cy="640" r="14" fill="#D89A3D" opacity="0.85"/>
+    <circle cx="1080" cy="150" r="10" fill="#C5372C" opacity="0.9"/>
+    <circle cx="990" cy="660" r="8" fill="#F7EFE0" opacity="0.8"/>
+  </g>
+
+  <!-- prescription label -->
+  <g transform="translate(330 400) rotate(-4)" filter="url(#soft)">
+    <rect x="-260" y="-300" width="520" height="600" rx="14" fill="#F7EFE0" stroke="#E7DCC6" stroke-width="2"/>
+
+    <!-- top rule row -->
+    <text x="-228" y="-252" font-family="Georgia, 'Times New Roman', serif" font-size="40" font-weight="bold" fill="#C5372C">&#8478;</text>
+    <rect x="-184" y="-274" width="150" height="14" rx="4" fill="#221E19" opacity="0.55"/>
+    <line x1="-228" y1="-236" x2="228" y2="-236" stroke="#221E19" stroke-width="3"/>
+
+    <!-- drug name -->
+    <text x="-228" y="-168" font-family="Georgia, 'Times New Roman', serif" font-size="46" font-weight="bold" fill="#221E19" letter-spacing="1">QUALIAFEN</text>
+    <text x="116" y="-168" font-family="Georgia, 'Times New Roman', serif" font-size="26" font-weight="bold" fill="#C5372C">200 mg</text>
+    <rect x="-228" y="-146" width="190" height="11" rx="4" fill="#221E19" opacity="0.32"/>
+
+    <!-- faux body text -->
+    <g fill="#221E19">
+      <rect x="-228" y="-100" width="96" height="9" rx="3" opacity="0.3"/>
+      <rect x="-228" y="-80" width="430" height="11" rx="4" opacity="0.6"/>
+      <rect x="-228" y="-60" width="372" height="11" rx="4" opacity="0.6"/>
+
+      <rect x="-228" y="-18" width="120" height="9" rx="3" opacity="0.3"/>
+      <rect x="-228" y="2" width="448" height="11" rx="4" opacity="0.6"/>
+      <rect x="-228" y="22" width="300" height="11" rx="4" opacity="0.6"/>
+    </g>
+
+    <!-- boxed warning -->
+    <rect x="-228" y="62" width="456" height="74" fill="none" stroke="#221E19" stroke-width="5"/>
+    <rect x="-206" y="84" width="128" height="12" rx="4" fill="#C5372C"/>
+    <rect x="-66" y="84" width="266" height="12" rx="4" fill="#221E19" opacity="0.62"/>
+    <rect x="-206" y="106" width="330" height="12" rx="4" fill="#221E19" opacity="0.62"/>
+
+    <!-- handwritten note squiggle -->
+    <path d="M -226 178 q 30 -22 60 0 t 60 0 t 60 0 t 60 0 t 60 0" fill="none" stroke="#2E4A8C" stroke-width="6" stroke-linecap="round" opacity="0.85"/>
+
+    <!-- barcode -->
+    <g fill="#221E19" opacity="0.9">
+      <rect x="-228" y="222" width="6" height="56"/>
+      <rect x="-214" y="228" width="4" height="50"/>
+      <rect x="-202" y="228" width="8" height="50"/>
+      <rect x="-186" y="222" width="4" height="56"/>
+      <rect x="-174" y="228" width="6" height="50"/>
+      <rect x="-160" y="228" width="4" height="50"/>
+      <rect x="-148" y="228" width="8" height="50"/>
+      <rect x="-132" y="222" width="6" height="56"/>
+      <rect x="-118" y="228" width="4" height="50"/>
+      <rect x="-106" y="228" width="6" height="50"/>
+      <rect x="-92" y="228" width="8" height="50"/>
+      <rect x="-76" y="228" width="4" height="50"/>
+    </g>
+
+    <!-- FILLED stamp -->
+    <g transform="translate(158 -262) rotate(9)">
+      <rect x="-66" y="-20" width="132" height="40" rx="7" fill="none" stroke="#D89A3D" stroke-width="5" opacity="0.95"/>
+      <text x="0" y="9" text-anchor="middle" font-family="'Courier New', monospace" font-size="24" font-weight="bold" fill="#D89A3D" letter-spacing="6">FILLED</text>
+    </g>
+  </g>
+
+  <!-- the capsule -->
+  <g transform="translate(880 400) rotate(22)" filter="url(#softSm)">
+    <rect x="-190" y="-72" width="380" height="144" rx="72" fill="#C5372C"/>
+    <path d="M -190 0 a 72 72 0 0 1 72 -72 L 0 -72 L 0 72 L -118 72 a 72 72 0 0 1 -72 -72 Z" fill="#FBF6EC"/>
+    <line x1="0" y1="-72" x2="0" y2="72" stroke="#0B2620" stroke-opacity="0.18" stroke-width="3"/>
+    <rect x="-182" y="-66" width="364" height="60" rx="30" fill="url(#capsuleGloss)"/>
+  </g>
+
+  <!-- vignette -->
+  <rect width="1200" height="800" fill="none"/>
+</svg>

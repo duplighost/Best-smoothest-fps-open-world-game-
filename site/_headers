@@ -1,0 +1,122 @@
+/no-moon/index.html
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/no-moon/no-moon-sw.js
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/no-moon-sw.js
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/clear.html
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/_headers
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/robots.txt
+  Cache-Control: public, max-age=3600
+
+/sitemap.xml
+  Cache-Control: public, max-age=3600
+
+/no-moon/
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/no-moon/*
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/assets/og/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/brand/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/toy-banana.svg
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/audio/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/site-ambient.css
+  Cache-Control: public, max-age=3600
+
+/assets/site-ambient.js
+  Cache-Control: public, max-age=3600
+
+/luma/index.html
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/luma/sw.js
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/luma/js/*
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/luma/css/*
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/banana/index.html
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/banana/game.js
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/banana/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/glide/index.html
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/glide/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/rocket-shoes/index.html
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/rocket-shoes/src/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/rocket-shoes/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/marrow/index.html
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/marrow/src/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/marrow/vendor/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/marrow/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/skyshard/index.html
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/skyshard/src/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/skyshard/vendor/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/skyshard/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/still/index.html
+  Cache-Control: no-store, no-cache, must-revalidate, max-age=0
+
+/still/src/*
+  Cache-Control: public, max-age=0, must-revalidate
+
+/still/vendor/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/still/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Permissions-Policy: camera=(), geolocation=(), payment=(), microphone=(self)

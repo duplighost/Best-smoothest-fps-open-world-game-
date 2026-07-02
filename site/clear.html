@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>No Moon Reset / Fresh Start</title>
+<style>
+  :root{color-scheme:dark;}
+  body{font-family:system-ui,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;background:#05070b;color:#eef3ff;padding:24px;line-height:1.45;max-width:800px;margin:0 auto;}
+  button{font-size:18px;padding:12px 16px;border-radius:12px;border:0;font-weight:850;background:#eaf2ff;color:#05070b;box-shadow:0 12px 34px rgba(130,170,255,.22);margin:4px 0;cursor:pointer;}
+  button.danger{background:#ffb0a0;color:#1a0808;box-shadow:0 12px 34px rgba(255,118,90,.30);}
+  button:disabled{opacity:.55;filter:grayscale(.35);cursor:not-allowed;}
+  pre{white-space:pre-wrap;background:rgba(255,255,255,.08);padding:12px;border-radius:12px;margin-top:16px;min-height:90px;}
+  a{color:#bde7ff;}
+  h2{margin-top:28px;font-size:18px;letter-spacing:.04em;color:#cfe2ff;}
+  .row{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+  .note{font-size:13px;color:rgba(207,226,255,.72);margin-top:6px;}
+</style>
+</head>
+<body>
+<h1>No Moon Reset / Fresh Start</h1>
+<p>v259 disables the service worker. Use this page only to evict old workers/caches or wipe local test progress.</p>
+
+<h2>Clear cache only</h2>
+<p>Unregisters service workers and deletes CacheStorage for this site. <strong>Does not wipe localStorage progress.</strong></p>
+<div class="row">
+  <button id="clear" type="button">Clear cache and reload No Moon</button>
+</div>
+
+<h2>Reset all No Moon progress</h2>
+<p>Wipes No Moon localStorage keys: main save, progress mirror, run snapshots, unlock residue, and old test-helper flags. This locks Moots / Vesper / Nadir again unless they are earned afterward.</p>
+<div class="row">
+  <button id="wipe" class="danger" type="button">Reset save only</button>
+  <button id="wipeAll" class="danger" type="button">Reset save AND clear cache</button>
+</div>
+<div class="note">After a wipe, only Rook, Nyx, Sol, and Mire should remain available.</div>
+
+<pre id="log">Ready. Pick an option above.</pre>
+<p><a href="/no-moon/?fresh=1">Open No Moon with a guaranteed fresh save</a> · <a href="/">Back to Qualiacology</a></p>
+<script>
+(function () {
+  var clearBtn = document.getElementById('clear');
+  var wipeBtn = document.getElementById('wipe');
+  var wipeAllBtn = document.getElementById('wipeAll');
+  var box = document.getElementById('log');
+  function write(message) { box.textContent = String(message); }
+  function log(message) { box.textContent += '\n' + String(message); }
+
+  function isNoMoonKey(key) {
+    if (!key) return false;
+    return /^noMoon/i.test(key) || /^NO_MOON/.test(key) || /^riftWake/i.test(key) || key === 'qualia.noMoon.cacheBust';
+  }
+
+  function wipeProgress() {
+    var removed = [];
+    try {
+      var keys = [];
+      var explicit = ['noMoonSave_v1','noMoonProgress_v68','noMoonRunSnapshot_v68','noMoon.v39.sunPathClearCount','noMoon.v33.victoryCount','noMoon.v33.moonkeyReturnCount','noMoonAudioMuted','noMoonMusicEnabled','noMoonBestiarySeen','noMoonEnableSecretTesterUnlock','NO_MOON_ENABLE_SECRET_TEST_UNLOCK'];
+      for (var e = 0; e < explicit.length; e++) if (localStorage.getItem(explicit[e]) != null) keys.push(explicit[e]);
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (isNoMoonKey(k) && keys.indexOf(k) < 0) keys.push(k);
+      }
+      for (var j = 0; j < keys.length; j++) {
+        try { localStorage.removeItem(keys[j]); removed.push(keys[j]); } catch (_) {}
+      }
+    } catch (err) {
+      log('localStorage error: ' + ((err && (err.stack || err.message)) || err));
+    }
+    return removed;
+  }
+
+  async function clearCaches() {
+    try {
+      if ('serviceWorker' in navigator) {
+        var regs = await navigator.serviceWorker.getRegistrations();
+        log('Service workers found: ' + regs.length);
+        for (var i = 0; i < regs.length; i++) {
+          try { await regs[i].unregister(); log('Unregistered service worker #' + (i + 1)); } catch (err) { log('Service worker unregister error: ' + err); }
+        }
+      } else {
+        log('Service workers are not supported in this browser.');
+      }
+      if ('caches' in window) {
+        var names = await caches.keys();
+        log('Caches found: ' + names.length);
+        for (var j = 0; j < names.length; j++) {
+          try { await caches.delete(names[j]); log('Deleted cache: ' + names[j]); } catch (err2) { log('Cache delete error for ' + names[j] + ': ' + err2); }
+        }
+      } else {
+        log('CacheStorage is not supported in this browser.');
+      }
+    } catch (err3) {
+      log('ERROR: ' + ((err3 && (err3.stack || err3.message)) || err3));
+    }
+  }
+
+  function setBusy(busy) {
+    clearBtn.disabled = busy;
+    wipeBtn.disabled = busy;
+    wipeAllBtn.disabled = busy;
+  }
+
+  async function doClearCacheOnly() {
+    setBusy(true);
+    write('Starting cache cleanup...');
+    await clearCaches();
+    log('Done. Reloading No Moon with a cache-busting URL...');
+    setTimeout(function () { window.location.assign('/no-moon/?cache-cleared=' + Date.now()); }, 650);
+  }
+
+  function doWipeOnly() {
+    setBusy(true);
+    write('Wiping No Moon localStorage progress...');
+    var removed = wipeProgress();
+    log('Removed ' + removed.length + ' key(s):');
+    for (var i = 0; i < removed.length; i++) log('  - ' + removed[i]);
+    log('Done. Reloading No Moon...');
+    setTimeout(function () { window.location.assign('/no-moon/?fresh=1&progress-wiped=' + Date.now()); }, 800);
+  }
+
+  async function doWipeAndClear() {
+    setBusy(true);
+    write('Wiping localStorage progress AND clearing cache...');
+    var removed = wipeProgress();
+    log('Removed ' + removed.length + ' key(s):');
+    for (var i = 0; i < removed.length; i++) log('  - ' + removed[i]);
+    await clearCaches();
+    log('Done. Reloading No Moon...');
+    setTimeout(function () { window.location.assign('/no-moon/?fresh=1&fully-reset=' + Date.now()); }, 800);
+  }
+
+  clearBtn.addEventListener('click', doClearCacheOnly);
+  wipeBtn.addEventListener('click', doWipeOnly);
+  wipeAllBtn.addEventListener('click', doWipeAndClear);
+})();
+</script>
+</body>
+</html>

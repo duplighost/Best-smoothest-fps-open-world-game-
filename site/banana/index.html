@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="description" content="The Screaming Banana Dilemma — a first-person surreal ethical incident simulator about a kitten, a freezer, and a banana that should not have lungs." />
+  <meta name="theme-color" content="#05070b" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="The Screaming Banana Dilemma" />
+  <meta property="og:description" content="A surreal first-person ethical incident simulator about a kitten, a freezer, and a banana that should not have lungs." />
+  <meta property="og:url" content="https://qualiacology.com/banana/" />
+  <meta property="og:image" content="https://qualiacology.com/assets/og/banana-og-v280.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="The Screaming Banana Dilemma" />
+  <meta name="twitter:description" content="A kitten, a freezer, and a banana-shaped category error with lungs it probably should not have." />
+  <meta name="twitter:image" content="https://qualiacology.com/assets/og/banana-og-v280.png" />
+  <link rel="canonical" href="https://qualiacology.com/banana/" />
+  <link rel="icon" href="/assets/favicon.svg" />
+  <title>The Screaming Banana Dilemma</title>
+  <style>
+    :root{
+      --paper:#fff8df;
+      --ink:#241a08;
+      --banana:#ffd73f;
+      --amber:#ffc65c;
+      --danger:#ff5d52;
+      --good:#70ffb6;
+      --blue:#9fd7ff;
+      --glass:rgba(9,13,20,.58);
+      --glass2:rgba(255,255,255,.12);
+    }
+    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{margin:0;height:100%;overflow:hidden;background:#05070b;color:white;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;touch-action:none}
+    #gameCanvas{position:fixed;inset:0;width:100%;height:100%;display:block;background:#080a10;cursor:crosshair}
+    #startScreen,#endingScreen,#choiceOverlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:20;padding:22px}
+    #startScreen{background:radial-gradient(circle at 50% 35%,rgba(255,232,88,.13),rgba(4,10,18,.76) 48%,rgba(0,0,0,.96)),linear-gradient(160deg,#1d1823,#070608 52%,#030407)}
+    #startScreen:before{content:"";position:absolute;inset:0;background:url('assets/freezer_reference-bg.webp') center/cover no-repeat;opacity:.20;filter:blur(1.5px) saturate(.95) sepia(.08);transform:scale(1.03)}
+    #startScreen:after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 63% 48%,rgba(255,220,84,.18),transparent 24%),linear-gradient(90deg,rgba(255,190,86,.05),rgba(111,190,255,.08));pointer-events:none}
+    .card{position:relative;width:min(760px,94vw);padding:34px 28px;border:1px solid rgba(255,255,255,.22);border-radius:28px;background:linear-gradient(145deg,rgba(28,18,22,.84),rgba(5,7,11,.78));box-shadow:0 24px 90px rgba(0,0,0,.68),inset 0 1px 0 rgba(255,255,255,.18);backdrop-filter:blur(14px);text-align:center}
+    h1{font-size:clamp(2.1rem,7vw,5.5rem);line-height:.94;margin:0 0 18px;letter-spacing:-.06em;text-wrap:balance;text-shadow:0 2px 0 rgba(0,0,0,.3),0 0 38px rgba(255,226,82,.35)}
+    .subtitle{font-size:clamp(1rem,2.8vw,1.3rem);line-height:1.45;opacity:.86;margin:8px auto 24px;max-width:630px}
+    button{font:inherit;color:#1b1200;border:0;border-radius:999px;padding:14px 22px;background:linear-gradient(180deg,#fff19e,#ffbe35);box-shadow:0 10px 30px rgba(255,192,55,.22),inset 0 1px 0 rgba(255,255,255,.6);font-weight:800;letter-spacing:.01em;cursor:pointer;touch-action:manipulation}
+    button:hover{filter:brightness(1.04)}
+    button.secondary{background:linear-gradient(180deg,rgba(255,255,255,.20),rgba(255,255,255,.10));color:white;border:1px solid rgba(255,255,255,.16);box-shadow:none}
+    #hud{position:fixed;top:env(safe-area-inset-top,0);left:0;right:0;z-index:10;pointer-events:none;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:12px}
+    #objective{max-width:min(560px,72vw);padding:11px 14px;border-radius:18px;background:var(--glass);box-shadow:0 12px 45px rgba(0,0,0,.34);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(12px);font-size:14px;line-height:1.35}
+    #objective b{color:#ffe770}
+    #stats{min-width:190px;padding:10px 12px;border-radius:18px;background:var(--glass);border:1px solid rgba(255,255,255,.12);backdrop-filter:blur(12px);font-size:12px;line-height:1.7;text-align:left}
+    .bar{display:inline-block;vertical-align:middle;width:72px;height:6px;border-radius:999px;background:rgba(255,255,255,.14);overflow:hidden;margin-left:6px}
+    .fill{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#ff5d52,#ffc65c,#70ffb6);width:40%}
+    #crosshair{position:fixed;left:50%;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;z-index:9;pointer-events:none;opacity:.72}
+    #crosshair:before,#crosshair:after{content:"";position:absolute;background:rgba(255,255,255,.86);box-shadow:0 0 8px rgba(0,0,0,.45)}
+    #crosshair:before{left:10px;top:2px;width:2px;height:18px}
+    #crosshair:after{left:2px;top:10px;width:18px;height:2px}
+    #prompt{position:fixed;left:50%;bottom:calc(112px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:10;max-width:min(680px,92vw);padding:12px 16px;border-radius:18px;background:rgba(8,10,16,.72);border:1px solid rgba(255,255,255,.15);box-shadow:0 12px 50px rgba(0,0,0,.48);backdrop-filter:blur(12px);text-align:center;font-size:14px;line-height:1.35;pointer-events:none;opacity:0;transition:opacity .12s}
+    #prompt.show{opacity:1}
+    #toast{position:fixed;left:50%;bottom:calc(26px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:12;width:min(760px,94vw);padding:13px 16px;border-radius:20px;background:rgba(15,12,9,.78);border:1px solid rgba(255,215,94,.22);box-shadow:0 15px 65px rgba(0,0,0,.55);backdrop-filter:blur(14px);font-size:14px;line-height:1.42;text-align:center;opacity:0;transition:opacity .18s, transform .18s;pointer-events:none}
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
+    #interactButton{position:fixed;right:calc(26px + env(safe-area-inset-right,0px));bottom:calc(112px + env(safe-area-inset-bottom,0px));z-index:14;width:96px;height:96px;border-radius:50%;display:none;align-items:center;justify-content:center;text-align:center;padding:0;background:radial-gradient(circle at 35% 25%,#fff8be,#ffcb42 45%,#da8c00);box-shadow:0 14px 46px rgba(0,0,0,.42),0 0 0 7px rgba(255,255,255,.08);font-size:13px;color:#211300}
+    #joystickLeft,#joystickRight{position:fixed;width:132px;height:132px;border-radius:50%;border:2px solid rgba(255,255,255,.20);background:radial-gradient(circle,rgba(255,255,255,.10),rgba(255,255,255,.025));z-index:13;display:none;pointer-events:none;transform:translate(-50%,-50%);backdrop-filter:blur(4px)}
+    .knob{position:absolute;left:50%;top:50%;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;background:rgba(255,255,255,.32);box-shadow:0 10px 25px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.4);transform:translate(0,0)}
+    #choiceOverlay{display:none;background:rgba(0,0,0,.55);z-index:30;backdrop-filter:blur(5px)}
+    #choiceOverlay .card{max-width:720px;text-align:left}
+    #choiceTitle{margin:0 0 8px;font-size:1.55rem;color:#ffe770;letter-spacing:-.02em}
+    #choiceText{line-height:1.45;opacity:.88;margin:0 0 16px}
+    #choices{display:grid;gap:10px}
+    #choices button{text-align:left;border-radius:16px;padding:13px 14px;font-weight:750}
+    #endingScreen{display:none;background:radial-gradient(circle at 50% 32%,rgba(255,221,92,.14),rgba(0,0,0,.82) 58%,#000);z-index:40}
+    #endingTitle{margin:0 0 10px;font-size:clamp(1.9rem,5vw,4rem);letter-spacing:-.04em;color:#ffe770;text-align:center}
+    #endingText{line-height:1.5;opacity:.92;text-align:left;margin:0 auto 18px;max-width:710px}
+    #help{position:fixed;left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:9;color:rgba(255,255,255,.65);font-size:11px;background:rgba(0,0,0,.28);padding:8px 10px;border-radius:14px;border:1px solid rgba(255,255,255,.08);pointer-events:none}
+    .homeLink{position:fixed;left:max(12px,env(safe-area-inset-left));top:max(12px,env(safe-area-inset-top));z-index:45;color:rgba(255,255,255,.78);text-decoration:none;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;border:1px solid rgba(255,255,255,.12);background:rgba(5,7,11,.44);border-radius:999px;padding:8px 11px;backdrop-filter:blur(10px)}.homeLink:hover,.homeLink:focus-visible{color:white;border-color:rgba(255,215,63,.45);outline:none}
+    .hidden{display:none!important}
+    @media (pointer:coarse),(max-width:800px){
+      #interactButton{display:flex}
+      #stats{display:none}
+      #objective{max-width:calc(100vw - 24px);font-size:13px}
+      #help{display:none}
+      #prompt{bottom:calc(220px + env(safe-area-inset-bottom,0px));font-size:13px}
+      #toast{bottom:calc(20px + env(safe-area-inset-bottom,0px));font-size:13px}
+    }
+  </style>
+</head>
+<body>
+  <a class="homeLink" href="/">← Qualiacology</a>
+  <canvas id="gameCanvas"></canvas>
+  <div id="crosshair" class="hidden"></div>
+  <div id="hud" class="hidden">
+    <div id="objective"></div>
+    <div id="stats"></div>
+  </div>
+  <div id="prompt"></div>
+  <button id="interactButton" type="button" aria-label="Interact">INTERACT</button>
+  <div id="toast"></div>
+  <div id="help" class="hidden">WASD/Arrows move · Mouse look · E interact · Click scene to capture mouse · Esc releases</div>
+  <div id="joystickLeft"><div class="knob"></div></div>
+  <div id="joystickRight"><div class="knob"></div></div>
+
+  <div id="startScreen">
+    <div class="card">
+      <h1>You Hear a Silly Scream from your Freezer</h1>
+      <p class="subtitle">A short first-person ethical incident simulator about a kitten, a freezer, and a banana-shaped category error with lungs it probably should not have.</p>
+      <button id="startButton" type="button">Start</button>
+      <p class="subtitle" style="font-size:.92rem;opacity:.68;margin-top:18px">Phone: put your left thumb anywhere on the left side to move and your right thumb anywhere on the right side to look. Keyboard: WASD + mouse + E.</p>
+    </div>
+  </div>
+
+  <div id="choiceOverlay">
+    <div class="card">
+      <h2 id="choiceTitle"></h2>
+      <p id="choiceText"></p>
+      <div id="choices"></div>
+    </div>
+  </div>
+
+  <div id="endingScreen">
+    <div class="card">
+      <h2 id="endingTitle"></h2>
+      <div id="endingText"></div>
+      <button id="restartButton" type="button">Play Again</button>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+/no-moon /no-moon/index.html 301!
+/no-moon.html /no-moon/index.html 301!
+
+/rift-wake /no-moon/ 301!
+/rift-wake.html /no-moon/ 301!
+/rift-wake/* /no-moon/ 301!
+
+/game /no-moon/ 302
+/play /no-moon/ 302
+/doopliss.html /doopliss/ 301!
+/psychopharmacology.html /psychopharmacology/ 301!
+/this-helped-someone.html /this-helped-someone/ 301!
+/book /book.html 301!
+
+# --- little toys ---
+/glide   /glide/index.html  301!
+/fly     /glide/            302
+/luma    /luma/index.html   301!
+/visualizer /luma/          302
+/dispensary /dispensary/index.html 301!
+/pharmacy /dispensary/      302
+/rx      /dispensary/       302
+
+# --- integrated games ---
+/banana         /banana/index.html       301!
+/banana.html    /banana/                 301!
+/screaming-banana /banana/               302
+/banana-dilemma /banana/                 302
+
+# --- Rocket Shoes ---
+/rocket-shoes       /rocket-shoes/index.html  301!
+/rocket-shoes.html  /rocket-shoes/            301!
+/rocketshoes        /rocket-shoes/            302
+/rockets            /rocket-shoes/            302
+/moon-boots         /rocket-shoes/            302
+/boon-moots         /rocket-shoes/            302
+
+# --- Marrow ---
+/marrow             /marrow/index.html        301!
+/marrow.html        /marrow/                  301!
+/horror             /marrow/                  302
+/the-house          /marrow/                  302

@@ -1,0 +1,1812 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#bfe3a0" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="description" content="Glide — a wordless flying-squirrel forest toy from Qualiacology." />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Qualiacology" />
+    <meta property="og:title" content="Glide | Qualiacology" />
+    <meta property="og:description" content="Drift through an endless, sun-dappled forest as a tiny flying squirrel." />
+    <meta property="og:url" content="https://qualiacology.com/glide/" />
+    <meta property="og:image" content="https://qualiacology.com/assets/toy-glide.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Glide | Qualiacology" />
+    <meta name="twitter:description" content="Drift through an endless, sun-dappled forest as a tiny flying squirrel." />
+    <meta name="twitter:image" content="https://qualiacology.com/assets/toy-glide.jpg" />
+    <link rel="canonical" href="https://qualiacology.com/glide/" />
+    <title>Glide | Qualiacology</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%90%BF%EF%B8%8F%3C/text%3E%3C/svg%3E" />
+    <style>
+      :root { color-scheme: light; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 100%; height: 100%; overflow: hidden;
+        background: #cfe8b4;
+        font-family: system-ui, -apple-system, sans-serif;
+        overscroll-behavior: none;
+        touch-action: none;
+        -webkit-user-select: none; user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #app { position: fixed; inset: 0; }
+      canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+      .home-link { position: fixed; left: max(12px, env(safe-area-inset-left)); top: max(12px, env(safe-area-inset-top)); z-index: 12; color: rgba(32,49,30,.72); text-decoration: none; font: 800 11px/1.2 system-ui, sans-serif; letter-spacing: .12em; text-transform: uppercase; padding: 8px 10px; border-radius: 999px; background: rgba(255,250,230,.44); border: 1px solid rgba(54,84,46,.16); backdrop-filter: blur(8px); }
+      .home-link:hover, .home-link:focus-visible { color: #20311e; border-color: rgba(54,84,46,.36); outline: none; }
+
+      /* Wordless loading veil: a soft sun that breathes, then fades. */
+      #veil {
+        position: fixed; inset: 0; z-index: 10;
+        display: flex; align-items: center; justify-content: center;
+        background: radial-gradient(120% 120% at 50% 35%, #f7f1cf 0%, #d7ecae 45%, #a9d189 100%);
+        transition: opacity 1.2s ease;
+      }
+      #veil.hidden { opacity: 0; pointer-events: none; }
+      #veil .orb {
+        width: 64px; height: 64px; border-radius: 50%;
+        background: radial-gradient(circle at 40% 35%, #fff6d8, #ffd980 60%, #f4b24a 100%);
+        box-shadow: 0 0 40px 14px rgba(255, 214, 130, 0.7);
+        animation: breathe 2.4s ease-in-out infinite;
+      }
+      @keyframes breathe {
+        0%, 100% { transform: scale(0.82); opacity: 0.78; }
+        50%      { transform: scale(1.12); opacity: 1; }
+      }
+      /* Subtle hint glyphs for first-time players (no text). Fade away on first input. */
+      #hint {
+        position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);
+        z-index: 9; display: flex; gap: 22px; align-items: center;
+        opacity: 0; transition: opacity 1s ease; pointer-events: none;
+        filter: drop-shadow(0 2px 6px rgba(0,0,0,0.25));
+      }
+      #hint.show { opacity: 0.9; }
+      #hint.gone { opacity: 0 !important; }
+      #hint svg { width: 46px; height: 46px; }
+
+      /* Wordless breathing vignette while idle. */
+      #idle {
+        position: fixed; inset: 0; z-index: 8; pointer-events: none; opacity: 0;
+        transition: opacity 2.5s ease;
+        background: radial-gradient(132% 122% at 50% 47%, rgba(0,0,0,0) 50%, rgba(14,24,18,0.42) 100%);
+      }
+      #idle.show { opacity: 1; animation: idlebreath 6s ease-in-out infinite; }
+      @keyframes idlebreath { 0%, 100% { opacity: 0.68; } 50% { opacity: 1; } }
+      #idle::after {
+        content: '🍃'; position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%);
+        font-size: 30px; opacity: 0.55; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.3));
+        animation: idlebob 5s ease-in-out infinite;
+      }
+      @keyframes idlebob { 0%, 100% { transform: translateX(-50%) translateY(0); } 50% { transform: translateX(-50%) translateY(-9px); } }
+
+      /* Cosy hollow: a warm vignette that swells as you curl up to rest. */
+      #cozy {
+        position: fixed; inset: 0; z-index: 7; pointer-events: none; opacity: 0;
+        transition: opacity 0.8s ease;
+        background:
+          radial-gradient(120% 110% at 50% 58%, rgba(255,180,90,0.10) 0%, rgba(0,0,0,0) 42%),
+          radial-gradient(125% 118% at 50% 52%, rgba(0,0,0,0) 40%, rgba(38,20,8,0.62) 100%);
+      }
+
+      /* Photo mode: a slim cinematic frame + wordless shutter button. */
+      #photo { position: fixed; inset: 0; z-index: 8; pointer-events: none; opacity: 0; transition: opacity 0.5s ease; }
+      #photo.show { opacity: 1; }
+      #photo .bar { position: absolute; left: 0; right: 0; height: 8.5%; background: rgba(8,10,9,0.82); }
+      #photo .bar.top { top: 0; } #photo .bar.bottom { bottom: 0; }
+      #shutter {
+        position: fixed; right: 22px; bottom: calc(8.5% + 18px); z-index: 9; width: 58px; height: 58px;
+        border-radius: 50%; border: 3px solid rgba(255,255,255,0.85); background: rgba(255,255,255,0.25);
+        display: none; cursor: pointer; -webkit-tap-highlight-color: transparent;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+      }
+      #shutter::after { content: ''; position: absolute; inset: 7px; border-radius: 50%; background: rgba(255,255,255,0.92); }
+      #shutter.show { display: block; }
+      #flash { position: fixed; inset: 0; z-index: 20; background: #fff; opacity: 0; pointer-events: none; }
+      #flash.go { animation: flash 0.4s ease; }
+      @keyframes flash { 0% { opacity: 0.9; } 100% { opacity: 0; } }
+
+      #pause-mark {
+        position: fixed; inset: 0; z-index: 19; pointer-events: none;
+        display: grid; place-items: center;
+        opacity: 0; transition: opacity 0.22s ease;
+        background: radial-gradient(circle at 50% 50%, rgba(18,24,20,0.18), rgba(18,24,20,0.42));
+        backdrop-filter: blur(3px) saturate(0.85);
+      }
+      #pause-mark.show { opacity: 1; }
+      #pause-mark::before {
+        content: '';
+        width: 70px; height: 88px;
+        background:
+          linear-gradient(90deg, rgba(255,248,220,0.86) 0 34%, transparent 34% 66%, rgba(255,248,220,0.86) 66% 100%);
+        border-radius: 12px;
+        filter: drop-shadow(0 8px 24px rgba(0,0,0,0.32));
+      }
+    </style>
+    <style>
+      #fallback {
+        position: fixed; inset: 0; z-index: 30;
+        display: grid; place-items: center;
+        padding: 24px;
+        background:
+          radial-gradient(120% 120% at 50% 35%, rgba(247,241,207,0.94) 0%, rgba(215,236,174,0.92) 46%, rgba(169,209,137,0.96) 100%);
+        color: #20311e;
+        text-align: center;
+      }
+      #fallback[hidden] { display: none; }
+      .fallback-card {
+        width: min(420px, 100%);
+        border-radius: 28px;
+        padding: 28px 24px;
+        background: rgba(255, 250, 230, 0.74);
+        border: 1px solid rgba(54, 84, 46, 0.18);
+        box-shadow: 0 24px 70px rgba(38, 64, 32, 0.24);
+        backdrop-filter: blur(10px);
+      }
+      .fallback-card h1 {
+        margin: 0 0 10px;
+        font-size: clamp(1.7rem, 8vw, 2.6rem);
+        line-height: 0.98;
+      }
+      .fallback-card p {
+        margin: 0 auto 18px;
+        max-width: 32ch;
+        line-height: 1.55;
+      }
+      .fallback-card a {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-height: 44px; padding: 0 18px;
+        border-radius: 999px;
+        background: rgba(32,49,30,0.92);
+        color: #fff8da;
+        text-decoration: none;
+        font-weight: 800;
+      }
+    </style>
+    <script>
+      (() => {
+        'use strict';
+
+        const showFallback = (detail) => {
+          const render = () => {
+            const veil = document.getElementById('veil');
+            const fallback = document.getElementById('fallback');
+            const message = document.querySelector('[data-fallback-detail]');
+            if (veil) veil.classList.add('hidden');
+            if (message && detail) message.textContent = detail;
+            if (fallback) fallback.hidden = false;
+          };
+          if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', render, { once: true });
+          } else {
+            render();
+          }
+        };
+
+        const requestedHash = (location.hash || '').replace('#', '').toLowerCase();
+        const biomeHashAliases = {};
+        window.__GLIDE_REQUESTED_BIOME = requestedHash;
+        if (biomeHashAliases[requestedHash]) {
+          history.replaceState(null, '', '#' + biomeHashAliases[requestedHash]);
+        }
+
+        const canUseWebGL = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            return !!(window.WebGLRenderingContext && (
+              canvas.getContext('webgl2', { antialias: false }) ||
+              canvas.getContext('webgl', { antialias: false }) ||
+              canvas.getContext('experimental-webgl', { antialias: false })
+            ));
+          } catch (error) {
+            return false;
+          }
+        };
+
+        const rememberRuntimeError = (detail) => {
+          const text = String(detail || '').slice(0, 240);
+          if (/pointer lock|chromium/i.test(text)) return;
+          document.documentElement.dataset.glideRuntimeError = text;
+        };
+
+        window.addEventListener('error', (event) => {
+          const text = String(event && (event.message || event.error && event.error.message) || '');
+          if (/pointer lock|chromium/i.test(text)) {
+            event.preventDefault();
+            return;
+          }
+          if (text) rememberRuntimeError(text);
+          if (/webgl|webglrenderer|context/i.test(text)) {
+            showFallback('This browser could not create the graphics context Glide needs. Try a current Chrome, Safari, Edge, or Firefox with hardware acceleration enabled.');
+          }
+        });
+
+        window.addEventListener('unhandledrejection', (event) => {
+          const text = String(event && event.reason && (event.reason.message || event.reason) || '');
+          if (/pointer lock|chromium/i.test(text)) {
+            event.preventDefault();
+            return;
+          }
+          if (text) rememberRuntimeError(text);
+          if (/webgl|webglrenderer|context/i.test(text)) {
+            showFallback('This browser could not create the graphics context Glide needs. Try a current Chrome, Safari, Edge, or Firefox with hardware acceleration enabled.');
+          }
+        });
+
+        if (window.HTMLCanvasElement?.prototype?.requestPointerLock) {
+          const nativePointerLock = window.HTMLCanvasElement.prototype.requestPointerLock;
+          window.HTMLCanvasElement.prototype.requestPointerLock = function safeRequestPointerLock(...args) {
+            try {
+              if (this.ownerDocument !== document || !document.documentElement.contains(this)) return undefined;
+              const result = nativePointerLock.apply(this, args);
+              if (result && typeof result.catch === 'function') {
+                result.catch((error) => {
+                  if (!/pointer lock/i.test(String(error && (error.message || error)))) throw error;
+                });
+              }
+              return result;
+            } catch (error) {
+              if (/pointer lock/i.test(String(error && (error.message || error)))) return undefined;
+              throw error;
+            }
+          };
+        }
+
+        if (canUseWebGL()) {
+          const script = document.createElement('script');
+          script.type = 'module';
+          script.crossOrigin = '';
+          script.src = './assets/index-cute-fast-stable-v80.js?v=80';
+          script.addEventListener('error', () => {
+            rememberRuntimeError('The Glide game module failed to load.');
+            showFallback('The forest could not finish loading. Refresh once, or try a current browser with hardware acceleration enabled.');
+          });
+          script.addEventListener('load', () => {
+            const clamp = (value, min, max) => {
+              const safeValue = Number.isFinite(value) ? value : 0;
+              return Math.max(min, Math.min(max, safeValue));
+            };
+
+            const patchUprightGlide = () => {
+              const game = window.__GAME;
+              if (!game || !game.player || !game.squirrel) {
+                requestAnimationFrame(patchUprightGlide);
+                return;
+              }
+
+              if (game.__uprightGlidePatched) return;
+              game.__uprightGlidePatched = true;
+              game.__glideMotionPatchVersion = 'v80-fast-stable-treegrab';
+
+              const { player, squirrel } = game;
+              if (game.engine && game.engine.renderer && game.engine.renderer.setPixelRatio && !game.__renderCostCapped) {
+                game.__renderCostCapped = true;
+                game.engine.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.35));
+                if (game.sky && game.sky.sun && game.sky.sun.shadow && game.sky.sun.shadow.mapSize) {
+                  game.sky.sun.shadow.mapSize.set(1024, 1024);
+                  if (game.sky.sun.shadow.map) game.sky.sun.shadow.map.dispose();
+                  game.sky.sun.shadow.map = null;
+                }
+              }
+              if (!game.__groundDiveInputInstalled) {
+                game.__groundDiveInputInstalled = true;
+                game.__diveHeld = false;
+                const setDiveHeld = (event, held) => {
+                  if (event.code !== 'ControlLeft' && event.code !== 'ControlRight' && event.code !== 'KeyF') return;
+                  game.__diveHeld = held;
+                  document.documentElement.dataset.glideDiveHeld = held ? '1' : '0';
+                  document.documentElement.dataset.glideGroundLock = held ? '1' : '0';
+                  event.preventDefault();
+                };
+                window.addEventListener('keydown', (event) => setDiveHeld(event, true));
+                window.addEventListener('keyup', (event) => setDiveHeld(event, false));
+                window.addEventListener('blur', () => {
+                  game.__diveHeld = false;
+                  document.documentElement.dataset.glideDiveHeld = '0';
+                  document.documentElement.dataset.glideGroundLock = '0';
+                });
+              }
+              if (game.critters?.update && !game.__launchCrittersPatched) {
+                game.__launchCrittersPatched = true;
+                const oldCritterUpdate = game.critters.update.bind(game.critters);
+                game.critters.update = function launchCritterUpdate(dt, position, speed) {
+                  const perchedIdle = game.__startedAtHighPerch && !game.__leftLaunchPerch;
+                  if (this.group) this.group.visible = !perchedIdle;
+                  if (perchedIdle) return;
+                  oldCritterUpdate(dt, position, speed);
+                };
+              }
+              player.roll = 0;
+              player.turnRate = 0;
+              player.pitch = clamp(player.pitch, -0.42, 0.42);
+              if (squirrel.bodyG) squirrel.bodyG.rotation.z = 0;
+
+              const snapToGround = (subject, maxHeight = 2.75, dampHorizontal = false) => {
+                if (!game.biomeAt || !subject?.position) return false;
+                const biome = game.biomeAt(subject.position.x, subject.position.z);
+                const ground = biome.ground + 0.28;
+                const heightAboveGround = subject.position.y - ground;
+                if (heightAboveGround > maxHeight) return false;
+                subject.position.y = ground;
+                if (subject.velocity) {
+                  subject.velocity.y = 0;
+                  if (dampHorizontal) {
+                    subject.velocity.x *= 0.42;
+                    subject.velocity.z *= 0.42;
+                  }
+                }
+                subject.state = 'ground';
+                subject.climbTree = null;
+                subject.climbSeg = null;
+                subject.pitch = 0;
+                subject.roll = 0;
+                subject._grabCooldown = Math.max(subject._grabCooldown || 0, 0.45);
+                return true;
+              };
+              const snapToGroundIfHeld = (subject, maxHeight = 2.75) => game.__diveHeld && snapToGround(subject, maxHeight, true);
+              const settleLowGroundRun = (subject, input, maxHeight = 0.9) => {
+                const wantsLaunch = game.__manualLaunchRequested || input?.action || input?._actionEdge;
+                if (game.__diveHeld || wantsLaunch || subject?.velocity?.y > 1.4) return false;
+                return snapToGround(subject, maxHeight);
+              };
+
+              const oldTryGrabTree = player._tryGrabTree && player._tryGrabTree.bind(player);
+              if (oldTryGrabTree) {
+                player._tryGrabTree = function gentlerTryGrabTree(fromGround) {
+                  const ground = game.biomeAt ? game.biomeAt(this.position.x, this.position.z).ground : -Infinity;
+                  const nearGround = this.position.y < ground + 3.2;
+                  if ((fromGround || nearGround || game.__diveHeld) && !game.input?.action) return false;
+                  return oldTryGrabTree(fromGround);
+                };
+              }
+
+              const oldLeap = player._leap && player._leap.bind(player);
+              if (oldLeap) {
+                player._leap = function deliberateLeap(power, fromBranchEnd = false) {
+                  const manualLaunch = game.__manualLaunchRequested || game.input?.action;
+                  game.__manualLaunchRequested = false;
+                  if (this.state === 'climb' && !manualLaunch && !fromBranchEnd) {
+                    if (this.velocity?.multiplyScalar) this.velocity.multiplyScalar(0.18);
+                    this._grabCooldown = 0.12;
+                    return;
+                  }
+                  oldLeap(power, fromBranchEnd);
+                  if (this.state === 'air' && (manualLaunch || fromBranchEnd)) {
+                    game.__leftLaunchPerch = true;
+                    const facing = Number.isFinite(this.facing) ? this.facing : 0;
+                    const hx = Math.sin(facing);
+                    const hz = Math.cos(facing);
+                    const current = Math.hypot(this.velocity?.x || 0, this.velocity?.z || 0);
+                    const target = fromBranchEnd ? 22 : 19;
+                    if (this.velocity && current < target) {
+                      this.velocity.x = hx * target;
+                      this.velocity.z = hz * target;
+                    }
+                    if (this.velocity && this.velocity.y < 2.5) this.velocity.y = 2.5;
+                    this.pitch = -0.22;
+                    this.roll = 0;
+                  }
+                };
+              }
+
+              if (!game.__manualLaunchControlsInstalled) {
+                game.__manualLaunchControlsInstalled = true;
+                const dropFromClimb = () => {
+                  if (player.state !== 'climb') return;
+                  const facing = Number.isFinite(player.facing) ? player.facing : 0;
+                  player.state = 'air';
+                  player.climbTree = null;
+                  player.climbSeg = null;
+                  player.pitch = -0.42;
+                  player.roll = 0;
+                  player._grabCooldown = 1.2;
+                  player.velocity?.set?.(Math.sin(facing) * 18, -3.5, Math.cos(facing) * 18);
+                  game.__leftLaunchPerch = true;
+                  game.camera?.addShake?.(0.08);
+                };
+                window.addEventListener('keydown', (event) => {
+                  if (event.code === 'Space' && player.state === 'climb') {
+                    game.__manualLaunchRequested = true;
+                  } else if ((event.code === 'ControlLeft' || event.code === 'ControlRight' || event.code === 'KeyF') && player.state === 'climb') {
+                    dropFromClimb();
+                  }
+                });
+              }
+
+              const oldGround = player._ground && player._ground.bind(player);
+              if (oldGround) {
+                player._ground = function steadierGround(dt, input, camera) {
+                  const savedAction = input?.action;
+                  const savedActionEdge = input?._actionEdge;
+                  if (game.__diveHeld && input) {
+                    input.action = false;
+                    input._actionEdge = false;
+                  }
+                  game.__allowGroundAutoGrab = !!(!game.__diveHeld && input?.action && input?.move && input.move.y > 0.15);
+                  oldGround(dt, input, camera);
+                  game.__allowGroundAutoGrab = false;
+                  if (game.__diveHeld && input) {
+                    input.action = savedAction;
+                    input._actionEdge = savedActionEdge;
+                  }
+                  if (game.__diveHeld) {
+                    snapToGroundIfHeld(this, 3.2);
+                  } else {
+                    settleLowGroundRun(this, input, 1.15);
+                  }
+                };
+              }
+
+              const oldAir = player._air && player._air.bind(player);
+              if (oldAir) {
+                player._air = function uprightAir(dt, input, camera) {
+                  oldAir(dt, input, camera);
+                  if (game.__diveHeld) {
+                    this.velocity.y -= 28 * dt;
+                    this.pitch = -0.42;
+                    this.roll *= 0.7;
+                    snapToGroundIfHeld(this, 3.4);
+                  } else {
+                    // Native air physics already handles terrain contact. Do not snap normal flight down here;
+                    // that was killing low glides and making the animal feel stalled.
+                  }
+                  const horizSpeed = Math.hypot(this.velocity?.x || 0, this.velocity?.z || 0);
+                  if (this.state === 'air' && horizSpeed < 12 && this.velocity) {
+                    const facing = Number.isFinite(this.facing) ? this.facing : 0;
+                    const rescue = Math.min(12, horizSpeed + 18 * dt);
+                    this.velocity.x = Math.sin(facing) * rescue;
+                    this.velocity.z = Math.cos(facing) * rescue;
+                  }
+                  this.pitch = clamp(this.pitch, -0.34, 0.24);
+                  this.roll = clamp(this.roll, -0.20, 0.20);
+                  this.turnRate = clamp(this.turnRate, -0.9, 0.9);
+                };
+              }
+
+              const oldApplyTransform = player.applyTransform && player.applyTransform.bind(player);
+              if (oldApplyTransform) {
+                player.applyTransform = function uprightApplyTransform(target, dt) {
+                  this.pitch = clamp(this.pitch, -0.34, 0.24);
+                  this.roll = clamp(this.roll, -0.20, 0.20);
+                  const perchedIdle = game.__startedAtHighPerch && !game.__leftLaunchPerch && this.state === 'climb';
+                  oldApplyTransform(target, dt);
+                  if (perchedIdle && target && target.position) {
+                    target.position.y -= 0.34;
+                  }
+                };
+              }
+
+              const oldSquirrelUpdate = squirrel.update && squirrel.update.bind(squirrel);
+              if (oldSquirrelUpdate) {
+                squirrel.update = function uprightSquirrelUpdate(dt, info) {
+                  const move = game.input?.move;
+                  const moveAmount = move?.lengthSq ? move.lengthSq() : ((move?.x || 0) * (move?.x || 0) + (move?.y || 0) * (move?.y || 0));
+                  if (game.__startedAtHighPerch && !game.__leftLaunchPerch && (moveAmount > 0.004 || game.input?.action || player.state !== 'climb')) {
+                    game.__leftLaunchPerch = true;
+                  }
+                  const perchedIdle = game.__startedAtHighPerch && !game.__leftLaunchPerch && player.state === 'climb';
+                  const safeInfo = info
+                    ? Object.assign({}, info, {
+                      state: perchedIdle ? 'ground' : info.state,
+                      speed: perchedIdle ? 0 : info.speed,
+                      rest: perchedIdle ? Math.max(info.rest || 0, 0.12) : info.rest,
+                      turn: clamp(info.turn || 0, -1.25, 1.25)
+                    })
+                    : info;
+                  oldSquirrelUpdate(dt, safeInfo);
+                  if (this.bodyG) {
+                    this.bodyG.rotation.z = clamp(this.bodyG.rotation.z, -0.14, 0.14);
+                  }
+                };
+              }
+            };
+
+            const installSecretForest = () => {
+              const game = window.__GAME;
+              if (!game || !game.engine || !game.player || !game.squirrel || !game.world) {
+                requestAnimationFrame(installSecretForest);
+                return;
+              }
+              if (game.__secretForestInstalled) return;
+
+              const scene = game.engine.scene;
+              const Vec3 = game.player.position && game.player.position.constructor;
+              const Group = game.squirrel.group && game.squirrel.group.constructor;
+              if (!scene || !Vec3 || !Group) return;
+
+              const meshes = [];
+              if (game.squirrel.group && game.squirrel.group.traverse) {
+                game.squirrel.group.traverse((node) => {
+                  if (node && node.isMesh && node.geometry && node.material) meshes.push(node);
+                });
+              }
+              const roundTemplate = meshes.find((mesh) => mesh.geometry && mesh.geometry.attributes && mesh.geometry.attributes.position && mesh.geometry.attributes.position.count > 80) || meshes[0];
+              const tinyTemplate = meshes.find((mesh) => mesh.scale && Math.max(mesh.scale.x, mesh.scale.y, mesh.scale.z) < 0.12) || roundTemplate;
+              if (!roundTemplate || !tinyTemplate) return;
+
+              game.__secretForestInstalled = true;
+
+              const root = new Group();
+              root.name = 'Secret forest nooks';
+              scene.add(root);
+
+              const siteKeys = new Set();
+              const sites = [];
+              const twoPi = Math.PI * 2;
+              let nextScan = 0;
+              let lastTreeTouch = 0;
+              let lastFrame = performance.now();
+
+              const fract = (value) => value - Math.floor(value);
+              const hash = (x, z, salt) => fract(Math.sin(x * 12.9898 + z * 78.233 + salt * 37.719) * 43758.5453);
+              const dist2 = (a, b) => {
+                const dx = a.x - b.x;
+                const dy = a.y - b.y;
+                const dz = a.z - b.z;
+                return dx * dx + dy * dy + dz * dz;
+              };
+
+              const makeMaterial = (template, color, emissive, opacity) => {
+                const material = template.material && template.material.clone ? template.material.clone() : template.material;
+                if (material && material.color && material.color.set) material.color.set(color);
+                if (material && material.emissive && material.emissive.set) {
+                  material.emissive.set(color);
+                  material.emissiveIntensity = emissive;
+                  material.userData = material.userData || {};
+                  material.userData.secretBaseEmissive = emissive;
+                }
+                if (material && opacity < 1) {
+                  material.transparent = true;
+                  material.opacity = opacity;
+                  material.depthWrite = false;
+                }
+                return material;
+              };
+
+              const makeMesh = (template, color, emissive, opacity) => {
+                const mesh = template.clone(false);
+                mesh.material = makeMaterial(template, color, emissive, opacity);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                mesh.frustumCulled = false;
+                return mesh;
+              };
+
+              const sound = (() => {
+                let ctx = null;
+                let master = null;
+                let noiseBuffer = null;
+
+                const start = () => {
+                  if (ctx) {
+                    if (ctx.state === 'suspended' && ctx.resume) ctx.resume();
+                    return;
+                  }
+                  const AudioCtor = window.AudioContext || window.webkitAudioContext;
+                  if (!AudioCtor) return;
+                  ctx = new AudioCtor();
+                  master = ctx.createGain();
+                  master.gain.value = 0.18;
+                  master.connect(ctx.destination);
+
+                  const length = Math.floor(ctx.sampleRate * 0.45);
+                  noiseBuffer = ctx.createBuffer(1, length, ctx.sampleRate);
+                  const channel = noiseBuffer.getChannelData(0);
+                  let last = 0;
+                  for (let i = 0; i < length; i += 1) {
+                    last = (last * 0.86) + ((Math.random() * 2 - 1) * 0.14);
+                    channel[i] = last;
+                  }
+                };
+
+                const bell = (notes, volume = 0.055, spacing = 0.075) => {
+                  if (!ctx || !master) return;
+                  const now = ctx.currentTime;
+                  notes.forEach((note, index) => {
+                    const at = now + index * spacing;
+                    const out = ctx.createGain();
+                    out.gain.setValueAtTime(0.0001, at);
+                    out.gain.linearRampToValueAtTime(volume, at + 0.025);
+                    out.gain.exponentialRampToValueAtTime(0.0001, at + 1.25);
+                    out.connect(master);
+
+                    [1, 2, 3].forEach((mul, partial) => {
+                      const osc = ctx.createOscillator();
+                      osc.type = partial === 0 ? 'sine' : 'triangle';
+                      osc.frequency.value = note * mul;
+                      const gain = ctx.createGain();
+                      gain.gain.value = partial === 0 ? 1 : 0.14 / partial;
+                      osc.connect(gain).connect(out);
+                      osc.start(at);
+                      osc.stop(at + 1.35);
+                    });
+                  });
+                };
+
+                const rustle = () => {
+                  if (!ctx || !master || !noiseBuffer) return;
+                  const now = ctx.currentTime;
+                  const source = ctx.createBufferSource();
+                  source.buffer = noiseBuffer;
+                  const filter = ctx.createBiquadFilter();
+                  filter.type = 'bandpass';
+                  filter.frequency.value = 1150 + Math.random() * 850;
+                  filter.Q.value = 0.8;
+                  const gain = ctx.createGain();
+                  gain.gain.setValueAtTime(0.0001, now);
+                  gain.gain.linearRampToValueAtTime(0.038, now + 0.025);
+                  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.32);
+                  source.connect(filter).connect(gain).connect(master);
+                  source.start(now);
+                  source.stop(now + 0.38);
+                };
+
+                const touch = (type) => {
+                  const scales = [
+                    [523.25, 659.25],
+                    [587.33, 739.99],
+                    [392.00, 493.88, 587.33],
+                    [659.25, 880.00],
+                    [440.00, 554.37, 659.25]
+                  ];
+                  const notes = scales[type % scales.length];
+                  bell([notes[Math.floor(Math.random() * notes.length)]], 0.036, 0.05);
+                };
+
+                const discover = (type) => {
+                  const chords = [
+                    [392, 523.25, 659.25, 783.99],
+                    [440, 554.37, 659.25, 880],
+                    [329.63, 493.88, 659.25, 987.77],
+                    [261.63, 392, 523.25, 659.25],
+                    [493.88, 659.25, 783.99, 1046.5]
+                  ];
+                  bell(chords[type % chords.length], 0.052, 0.09);
+                };
+
+                return { start, bell, rustle, touch, discover };
+              })();
+
+              ['pointerdown', 'keydown', 'touchstart'].forEach((eventName) => {
+                window.addEventListener(eventName, sound.start, { passive: true });
+              });
+
+              const palettes = [
+                { glow: 0xffd782, soft: 0xf7a35f, dark: 0x6a4630, accent: 0xfff2bb },
+                { glow: 0x86ffda, soft: 0x78b9ff, dark: 0x264f48, accent: 0xe9fff9 },
+                { glow: 0xff91cf, soft: 0xffc45f, dark: 0x554027, accent: 0xffffc9 },
+                { glow: 0xb8dcff, soft: 0xd7f6ff, dark: 0x48556a, accent: 0xffffff },
+                { glow: 0xc9ff8a, soft: 0x7ddf72, dark: 0x2e5130, accent: 0xf4ffd6 }
+              ];
+
+              const addItem = (site, template, color, emissive, opacity, position, scale, radius) => {
+                const mesh = makeMesh(template, color, emissive, opacity);
+                mesh.position.set(position.x, position.y, position.z);
+                mesh.scale.set(scale.x, scale.y, scale.z);
+                site.group.add(mesh);
+                site.items.push({
+                  mesh,
+                  baseScale: mesh.scale.clone(),
+                  baseY: position.y,
+                  radius,
+                  touch: 0,
+                  nextSound: 0
+                });
+                return mesh;
+              };
+
+              const createSite = (tree, type) => {
+                const palette = palettes[type % palettes.length];
+                const angle = hash(tree.x, tree.z, 14) * twoPi;
+                const offset = (tree.trunkRadius || 1.4) + 2.6 + hash(tree.x, tree.z, 15) * 2.2;
+                const center = new Vec3(
+                  tree.x + Math.cos(angle) * offset,
+                  (tree.baseY || game.player.position.y) + 0.2,
+                  tree.z + Math.sin(angle) * offset
+                );
+                const group = new Group();
+                group.position.copy(center);
+                group.rotation.y = angle + Math.PI;
+                root.add(group);
+
+                const site = {
+                  type,
+                  tree,
+                  center,
+                  group,
+                  items: [],
+                  motes: [],
+                  discovered: false,
+                  glow: 0,
+                  pulse: 0,
+                  nextAmbient: performance.now() + 2500 + hash(tree.x, tree.z, 16) * 5000,
+                  radius: 4.8 + hash(tree.x, tree.z, 17) * 1.6
+                };
+
+                const ringCount = 5 + Math.floor(hash(tree.x, tree.z, 18) * 4);
+                const ringRadius = 1.25 + hash(tree.x, tree.z, 19) * 0.6;
+                for (let i = 0; i < ringCount; i += 1) {
+                  const a = (i / ringCount) * twoPi + hash(tree.x, tree.z, 20 + i) * 0.18;
+                  const s = 0.22 + hash(tree.x, tree.z, 40 + i) * 0.22;
+                  addItem(site, roundTemplate, palette.dark, 0.025, 1, {
+                    x: Math.cos(a) * ringRadius,
+                    y: 0.03 + hash(tree.x, tree.z, 60 + i) * 0.12,
+                    z: Math.sin(a) * ringRadius
+                  }, { x: s * 1.1, y: s * 0.45, z: s * 0.95 }, 0.9);
+                }
+
+                const charmCount = 3 + Math.floor(hash(tree.x, tree.z, 82) * 3);
+                for (let i = 0; i < charmCount; i += 1) {
+                  const a = (i / charmCount) * twoPi + hash(tree.x, tree.z, 90 + i) * 0.5;
+                  const r = 0.55 + hash(tree.x, tree.z, 100 + i) * 0.7;
+                  const h = 0.34 + hash(tree.x, tree.z, 110 + i) * 0.45;
+                  addItem(site, tinyTemplate, i % 2 ? palette.soft : palette.glow, 0.22, 0.98, {
+                    x: Math.cos(a) * r,
+                    y: h,
+                    z: Math.sin(a) * r
+                  }, { x: 0.08, y: 0.12 + h * 0.12, z: 0.08 }, 0.75);
+                }
+
+                const centerScale = type === 3
+                  ? { x: 0.18, y: 0.72, z: 0.18 }
+                  : { x: 0.28, y: 0.28, z: 0.28 };
+                addItem(site, roundTemplate, palette.accent, 0.36, 0.96, {
+                  x: 0,
+                  y: type === 3 ? 0.72 : 0.48,
+                  z: 0
+                }, centerScale, 1.15);
+
+                for (let i = 0; i < 8; i += 1) {
+                  const mote = makeMesh(tinyTemplate, i % 2 ? palette.glow : palette.accent, 0.7, 0.72);
+                  const a = (i / 8) * twoPi;
+                  mote.position.set(Math.cos(a) * (0.8 + i * 0.035), 1.2 + hash(tree.x, tree.z, 130 + i) * 1.4, Math.sin(a) * (0.8 + i * 0.035));
+                  mote.scale.setScalar(0.035 + hash(tree.x, tree.z, 150 + i) * 0.035);
+                  mote.castShadow = false;
+                  group.add(mote);
+                  site.motes.push({ mesh: mote, a, speed: 0.25 + hash(tree.x, tree.z, 170 + i) * 0.4, y: mote.position.y });
+                }
+
+                const LightCtor = game.hollow && game.hollow.light && game.hollow.light.constructor;
+                if (LightCtor && sites.length < 4) {
+                  try {
+                    const light = new LightCtor(palette.glow, 0.08, 8, 2);
+                    light.position.set(0, 1.1, 0);
+                    group.add(light);
+                    site.light = light;
+                  } catch (error) {
+                    site.light = null;
+                  }
+                }
+
+                sites.push(site);
+                return site;
+              };
+
+              const scanForSites = (now) => {
+                if (now < nextScan) return;
+                nextScan = now + 900;
+                const trees = game.world.activeTrees || [];
+                const player = game.player.position;
+
+                for (const tree of trees) {
+                  if (sites.length >= 10) break;
+                  if (!Number.isFinite(tree.x) || !Number.isFinite(tree.z)) continue;
+                  const key = `${Math.round(tree.x / 5)}:${Math.round(tree.z / 5)}`;
+                  if (siteKeys.has(key)) continue;
+                  const dx = tree.x - player.x;
+                  const dz = tree.z - player.z;
+                  const distance = Math.hypot(dx, dz);
+                  if (distance < 12 || distance > 135) continue;
+                  const h = hash(tree.x, tree.z, 7);
+                  if (sites.length < 5 || h < 0.04) {
+                    siteKeys.add(key);
+                    createSite(tree, Math.floor(hash(tree.x, tree.z, 8) * palettes.length));
+                  }
+                }
+
+                for (let i = sites.length - 1; i >= 0; i -= 1) {
+                  const site = sites[i];
+                  const dx = site.center.x - player.x;
+                  const dz = site.center.z - player.z;
+                  if (sites.length > 6 && dx * dx + dz * dz > 220 * 220) {
+                    root.remove(site.group);
+                    sites.splice(i, 1);
+                  }
+                }
+              };
+
+              const touchActiveTrees = (now, player) => {
+                if (now - lastTreeTouch < 850) return;
+                const trees = game.world.activeTrees || [];
+                for (const tree of trees) {
+                  const dx = tree.x - player.x;
+                  const dz = tree.z - player.z;
+                  const close = (tree.trunkRadius || 1) + 0.95;
+                  if (dx * dx + dz * dz < close * close && Math.abs((tree.baseY || player.y) - player.y) < 3.2) {
+                    lastTreeTouch = now;
+                    sound.rustle();
+                    if (game.camera && game.camera.addShake) game.camera.addShake(0.045);
+                    break;
+                  }
+                }
+              };
+
+              const updateSecrets = (now) => {
+                const dt = Math.min(0.05, Math.max(0, (now - lastFrame) / 1000));
+                lastFrame = now;
+                scanForSites(now);
+
+                const player = game.player.position;
+                touchActiveTrees(now, player);
+
+                for (const site of sites) {
+                  const d2 = dist2(player, site.center);
+                  const near = d2 < site.radius * site.radius;
+                  const visible = d2 < 160 * 160;
+                  site.group.visible = visible;
+                  if (!visible) continue;
+
+                  if (near && !site.discovered) {
+                    site.discovered = true;
+                    site.pulse = 1;
+                    sound.discover(site.type);
+                    if (game.camera && game.camera.addShake) game.camera.addShake(0.18);
+                  }
+
+                  if (site.discovered && now > site.nextAmbient && d2 < 30 * 30) {
+                    site.nextAmbient = now + 5000 + Math.random() * 8000;
+                    sound.bell([523.25, 659.25, 783.99].sort(() => Math.random() - 0.5).slice(0, 2), 0.024, 0.08);
+                  }
+
+                  const desiredGlow = site.discovered || d2 < 14 * 14 ? 1 : 0.35;
+                  site.glow += (desiredGlow - site.glow) * (1 - Math.exp(-2.8 * dt));
+                  site.pulse *= Math.exp(-2.8 * dt);
+                  site.group.rotation.y += dt * 0.035 * site.glow;
+                  if (site.light) site.light.intensity = 0.05 + site.glow * 0.34 + site.pulse * 0.5;
+
+                  site.items.forEach((item, index) => {
+                    const world = new Vec3(
+                      site.center.x + item.mesh.position.x,
+                      site.center.y + item.mesh.position.y,
+                      site.center.z + item.mesh.position.z
+                    );
+                    const touching = dist2(player, world) < item.radius * item.radius;
+                    if (touching) {
+                      item.touch = 1;
+                      if (now > item.nextSound) {
+                        item.nextSound = now + 360;
+                        sound.touch(site.type + index);
+                        if (game.camera && game.camera.addShake) game.camera.addShake(0.035);
+                      }
+                    }
+                    item.touch *= Math.exp(-5.5 * dt);
+                    const bob = Math.sin(now * 0.002 + index * 1.7) * 0.035 * site.glow;
+                    const pop = 1 + item.touch * 0.32 + site.pulse * 0.18;
+                    item.mesh.position.y = item.baseY + bob + item.touch * 0.08;
+                    item.mesh.scale.set(item.baseScale.x * pop, item.baseScale.y * pop, item.baseScale.z * pop);
+                    item.mesh.rotation.y += dt * (0.18 + item.touch * 2.3);
+                    if (item.mesh.material && item.mesh.material.emissiveIntensity !== undefined) {
+                      const base = item.mesh.material.userData && item.mesh.material.userData.secretBaseEmissive || 0;
+                      item.mesh.material.emissiveIntensity = base + site.glow * 0.12 + item.touch * 0.45 + site.pulse * 0.25;
+                    }
+                  });
+
+                  site.motes.forEach((mote, index) => {
+                    const radius = 0.8 + index * 0.05 + site.glow * 0.25;
+                    const a = mote.a + now * 0.001 * mote.speed;
+                    mote.mesh.position.x = Math.cos(a) * radius;
+                    mote.mesh.position.z = Math.sin(a) * radius;
+                    mote.mesh.position.y = mote.y + Math.sin(now * 0.0024 + index) * 0.18 + site.pulse * 0.2;
+                    mote.mesh.scale.setScalar((0.035 + site.glow * 0.025) * (1 + site.pulse * 1.3));
+                    if (mote.mesh.material) {
+                      mote.mesh.material.opacity = 0.22 + site.glow * 0.58 + site.pulse * 0.2;
+                      if (mote.mesh.material.emissiveIntensity !== undefined) {
+                        mote.mesh.material.emissiveIntensity = 0.45 + site.glow * 0.55 + site.pulse * 0.7;
+                      }
+                    }
+                  });
+                }
+
+                requestAnimationFrame(updateSecrets);
+              };
+
+              game.__secretForest = { root, sites, sound };
+              requestAnimationFrame(updateSecrets);
+            };
+
+            const installWorldExpansion = () => {
+              const game = window.__GAME;
+              if (!game || !game.engine || !game.player || !game.squirrel || !game.world || !game.biomeAt || !game.findBiome) {
+                requestAnimationFrame(installWorldExpansion);
+                return;
+              }
+              if (game.__worldExpansionInstalled) return;
+
+              const scene = game.engine.scene;
+              const Vec3 = game.player.position && game.player.position.constructor;
+              const Group = game.squirrel.group && game.squirrel.group.constructor;
+              if (!scene || !Vec3 || !Group) return;
+
+              const sourceMeshes = [];
+              game.squirrel.group.traverse && game.squirrel.group.traverse((node) => {
+                if (node && node.isMesh && node.geometry && node.material) sourceMeshes.push(node);
+              });
+              const roundTemplate = sourceMeshes.find((mesh) => mesh.geometry?.attributes?.position?.count > 80) || sourceMeshes[0];
+              const tinyTemplate = sourceMeshes.find((mesh) => mesh.scale && Math.max(mesh.scale.x, mesh.scale.y, mesh.scale.z) < 0.16) || roundTemplate;
+              if (!roundTemplate || !tinyTemplate) return;
+
+              game.__worldExpansionInstalled = true;
+
+              const root = new Group();
+              root.name = 'Glide expanded world';
+              scene.add(root);
+
+              const twoPi = Math.PI * 2;
+              const destinationRoot = new Group();
+              const accentRoot = new Group();
+              const perchRoot = new Group();
+              const fluffRoot = new Group();
+              destinationRoot.name = '50 destination places';
+              accentRoot.name = 'Nearby biome identity props';
+              perchRoot.name = 'High launch tree';
+              fluffRoot.name = 'Cute animal polish v80';
+              root.add(destinationRoot, accentRoot, perchRoot);
+              game.squirrel.group.add(fluffRoot);
+
+              const biomeNames = ['flowerwood', 'redwood', 'golden highland', 'snowforest', 'desert oasis', 'crystal marsh', 'emberwood'];
+              const colorByKind = [0xff72b0, 0x0d2f1c, 0xf0ce62, 0xf4fbff, 0xeed17f, 0x39e6db, 0x2b222b];
+              const accentByKind = [0xffe26f, 0xffffff, 0x5f7f32, 0xaee7ff, 0x38c6df, 0xc5fff6, 0xffa24f];
+              const branchColor = 0x7a4c2e;
+              const barkDark = 0x2d1d13;
+
+              const hfract = (value) => value - Math.floor(value);
+              const hash = (a, b, salt) => hfract(Math.sin(a * 12.9898 + b * 78.233 + salt * 37.719) * 43758.5453);
+              const distXZ = (a, b) => Math.hypot(a.x - b.x, a.z - b.z);
+              const clamp01 = (value) => Math.max(0, Math.min(1, value));
+
+              const makeMaterial = (template, color, emissive = 0, opacity = 1) => {
+                const material = template.material?.clone ? template.material.clone() : template.material;
+                if (material?.color?.set) material.color.set(color);
+                if (material?.emissive?.set) {
+                  material.emissive.set(color);
+                  material.emissiveIntensity = emissive;
+                }
+                if (material && opacity < 1) {
+                  material.transparent = true;
+                  material.opacity = opacity;
+                  material.depthWrite = false;
+                }
+                return material;
+              };
+
+              const makeMesh = (template, color, emissive = 0, opacity = 1) => {
+                const mesh = template.clone(false);
+                mesh.material = makeMaterial(template, color, emissive, opacity);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                mesh.frustumCulled = false;
+                return mesh;
+              };
+
+              const addBlob = (group, color, x, y, z, sx, sy, sz, emissive = 0, opacity = 1, template = roundTemplate) => {
+                const mesh = makeMesh(template, color, emissive, opacity);
+                mesh.position.set(x, y, z);
+                mesh.scale.set(sx, sy, sz);
+                group.add(mesh);
+                return mesh;
+              };
+
+              const play = (name, seed = 0) => {
+                const sound = game.__secretForest?.sound;
+                if (!sound) return;
+                if (name === 'discover') sound.discover(seed);
+                else if (name === 'rustle') sound.rustle();
+                else if (name === 'touch') sound.touch(seed);
+                else if (name === 'water') sound.bell([392, 523.25, 659.25], 0.034, 0.055);
+                else if (name === 'lift') sound.bell([659.25, 880], 0.028, 0.045);
+              };
+
+              const installPause = () => {
+                if (game.__pauseInstalled) return;
+                game.__pauseInstalled = true;
+                const mark = document.createElement('div');
+                mark.id = 'pause-mark';
+                document.body.appendChild(mark);
+
+                const oldUpdate = game.player.update?.bind(game.player);
+                if (oldUpdate) {
+                  game.player.update = function pausedPlayerUpdate(dt, input, camera) {
+                    if (window.__GLIDE_PAUSED) {
+                      input?.move?.set?.(0, 0);
+                      if (input) input.action = false;
+                      if (this.velocity?.multiplyScalar) this.velocity.multiplyScalar(0.88);
+                      return oldUpdate(0, input, camera);
+                    }
+                    return oldUpdate(dt, input, camera);
+                  };
+                }
+
+                window.addEventListener('keydown', (event) => {
+                  if (event.code !== 'Escape') return;
+                  window.__GLIDE_PAUSED = !window.__GLIDE_PAUSED;
+                  mark.classList.toggle('show', !!window.__GLIDE_PAUSED);
+                  document.documentElement.dataset.glidePaused = window.__GLIDE_PAUSED ? '1' : '0';
+                  event.preventDefault();
+                });
+              };
+
+              const installFluff = () => {
+                if (game.__fluffInstalled) return;
+                game.__fluffInstalled = true;
+                document.documentElement.dataset.glideCharacterPolish = 'cute-animal-v80-fast-stable-treegrab';
+              };
+
+              const findVistaOrigin = () => {
+                let best = { x: game.player.position.x, z: game.player.position.z, score: -Infinity };
+                for (let gx = -4; gx <= 4; gx += 1) {
+                  for (let gz = -4; gz <= 4; gz += 1) {
+                    const x = gx * 620;
+                    const z = gz * 620;
+                    const counts = new Array(7).fill(0);
+                    let waterViews = 0;
+                    let height = 0;
+                    for (let i = 0; i < 24; i += 1) {
+                      const a = i / 24 * twoPi;
+                      const r = 360 + (i % 4) * 210;
+                      const info = game.biomeAt(x + Math.cos(a) * r, z + Math.sin(a) * r);
+                      counts[info.kind] += 1;
+                      height += info.ground;
+                      if (info.ground < 2) waterViews += 1;
+                    }
+                    const seen = counts.filter((count) => count > 1).length;
+                    const snow = counts[3] > 0 ? 1 : 0;
+                    const desert = counts[4] > 0 ? 1 : 0;
+                    const strange = counts[5] + counts[6] > 0 ? 1 : 0;
+                    const score = seen * 100 + snow * 24 + desert * 24 + strange * 30 + waterViews * 3 + height / 24;
+                    if (score > best.score) best = { x, z, score };
+                  }
+                }
+                return best;
+              };
+
+              let vistaOrigin = null;
+              let perchTree = null;
+              const fakeTrees = [];
+
+              const addPerchMeshLine = (group, a, b, radius, color) => {
+                const dx = b.x - a.x;
+                const dy = b.y - a.y;
+                const dz = b.z - a.z;
+                const length = Math.hypot(dx, dy, dz);
+                const mesh = addBlob(group, color, (a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2, length * 0.5, radius, radius, 0.03);
+                mesh.rotation.y = -Math.atan2(dz, dx);
+                mesh.rotation.z = Math.atan2(dy, Math.hypot(dx, dz));
+                return mesh;
+              };
+
+              const buildLaunchPerch = () => {
+                if (perchTree) return perchTree;
+                vistaOrigin = findVistaOrigin();
+                const baseY = game.biomeAt(vistaOrigin.x, vistaOrigin.z).ground;
+                const center = new Vec3(vistaOrigin.x, baseY + 128, vistaOrigin.z);
+                const branchA = new Vec3(center.x - 31, center.y + 2, center.z - 5);
+                const branchB = new Vec3(center.x + 31, center.y + 6, center.z + 5);
+                const trunkBase = new Vec3(center.x - 18, baseY + 4, center.z - 14);
+                const trunkTop = new Vec3(center.x - 10, center.y + 24, center.z - 8);
+                const perchSurfaceY = (branchA.y + branchB.y) / 2 + 10.8;
+                perchRoot.position.set(0, 0, 0);
+                const branchDeck = addBlob(perchRoot, 0x704226, center.x - 8, perchSurfaceY - 0.62, center.z, 31, 2.2, 16, 0.025, 1, tinyTemplate);
+                branchDeck.rotation.y = -Math.atan2(branchB.z - branchA.z, branchB.x - branchA.x);
+                branchDeck.receiveShadow = false;
+                branchDeck.castShadow = false;
+                const mainSeg = {
+                  a: new Vec3(branchA.x + 6, perchSurfaceY + 0.3, branchA.z + 1.4),
+                  b: new Vec3(branchB.x - 6, perchSurfaceY + 0.72, branchB.z - 1.4),
+                  r: 1.45,
+                  kind: 'branch'
+                };
+                perchTree = {
+                  x: center.x,
+                  z: center.z,
+                  baseY,
+                  height: 150,
+                  topY: center.y + 42,
+                  trunkRadius: 10,
+                  reach: 90,
+                  giant: true,
+                  segments: [
+                    { a: trunkBase, b: trunkTop, r: 9.4, kind: 'trunk' },
+                    mainSeg
+                  ]
+                };
+                perchTree.startSegment = mainSeg;
+                fakeTrees.push(perchTree);
+                return perchTree;
+              };
+
+              const movePlayerToPerch = () => {
+                const hashName = (location.hash || '').replace('#', '').toLowerCase();
+                if (hashName && hashName !== 'start' && hashName !== 'perch') return;
+                if (game.__startedAtHighPerch) return;
+                const tree = buildLaunchPerch();
+                const seg = tree.startSegment;
+                game.player.position.set((seg.a.x + seg.b.x) / 2 - 3, (seg.a.y + seg.b.y) / 2 + seg.r + 0.35, (seg.a.z + seg.b.z) / 2);
+                game.player.state = 'climb';
+                game.player.climbTree = tree;
+                game.player.climbSeg = seg;
+                game.player.velocity?.set?.(0, 0, 0);
+                game.player.facing = Math.PI * 0.43;
+                if (game.player.surfaceNormal?.set) game.player.surfaceNormal.set(0, 1, 0);
+                if (game.camera) {
+                  game.camera.distance = 13.2;
+                  game.camera.pitch = 0.34;
+                  game.camera.yaw = 0.96;
+                  game.camera._initialized = false;
+                }
+                if (game.sky?.setTime) {
+                  game.sky.setTime(0.54);
+                  game.sky.dayLength = 1000000000;
+                }
+                if (game.weather) {
+                  game.weather.snowing = 0;
+                  game.weather._cloudTarget = game.weather.cloudiness = 0.05;
+                  game.weather._wetTarget = game.weather.wetness = 0;
+                  game.weather._timer = 1000000000;
+                }
+                game.world.update?.(game.player.position);
+                game.world.buildAllPending?.();
+                game.__startedAtHighPerch = true;
+                game.__leftLaunchPerch = false;
+                game.__launchPerchStartedAt = performance.now();
+              };
+
+              const toys = [];
+              const waters = [];
+              const thermals = [];
+              const destinations = [];
+
+              const destinationSpecs = [
+                ['Amber Oasis',4,'oasis','coconut',1],['Palm Mirror Spring',4,'oasis','coconut',1],['Blue Date Basin',4,'oasis','coconut',1],['Sun Bowl Well',4,'oasis','coconut',1],['Crescent Dune Pool',4,'oasis','coconut',1],
+                ['Fossil Shade Camp',4,'dune','beetle',0],['Glass Dune Well',4,'dune','glass',1],['Cactus Choir',4,'cactus','seed',0],['Silk Sand Arch',4,'arch','seed',0],['Gold Lizard Rocks',4,'rocks','pebble',0],
+                ['Frostbell Hollow',3,'snow','snowball',0],['Powder Fox Drift',3,'snow','snowball',0],['Icicle Stair',3,'ice','snowball',0],['Moon Snow Cairn',3,'ice','snowball',0],['Blue Fir Bowl',3,'snow','snowball',0],
+                ['Aurora Shelf',3,'aurora','snowball',0],['Quiet White Bridge',3,'snow','snowball',0],['Frozen Pebble Run',3,'ice','snowball',0],['Pine Lantern Drift',3,'snow','snowball',0],['Snowmelt Pocket',3,'snow','snowball',1],
+                ['Giant Fern Nave',1,'redwood','cone',0],['Moss Bell Column',1,'redwood','cone',0],['Root Cathedral',1,'redwood','cone',0],['Fern Creek Step',1,'redwood','cone',1],['Sap Amber Ring',1,'redwood','amber',0],
+                ['Hollow Stump Court',1,'redwood','cone',0],['High Burl Balcony',1,'redwood','amber',0],['Mushroom Porch',1,'redwood','cap',0],['Cedar Shadow Gate',1,'redwood','cone',0],['Old Bark Spiral',1,'redwood','amber',0],
+                ['Buttercup Clearing',0,'flower','seed',0],['Pink Bee Meadow',0,'flower','seed',0],['Daisy Roundabout',0,'flower','seed',0],['Lantern Petal Bank',0,'flower','seed',0],['Bluebell Ramp',0,'flower','seed',0],
+                ['Honeygrass Mesa',2,'highland','seed',0],['Sunlit Thistle Steps',2,'highland','seed',0],['Ambergrass Switchback',2,'highland','pebble',0],['Golden Kite Ledge',2,'highland','seed',0],['Warm Stone Knoll',2,'highland','pebble',0],
+                ['Crystal Reed Pool',5,'crystal','crystal',1],['Teal Shard Garden',5,'crystal','crystal',0],['Singing Marsh Stones',5,'marsh','shell',1],['Glass Frog Step',5,'marsh','shell',1],['Luminous Reed Maze',5,'marsh','crystal',1],
+                ['Obsidian Firefly Bowl',6,'ember','ember',0],['Warm Coal Stair',6,'ember','ember',0],['Basalt Bell Fork',6,'ember','pebble',0],['Orange Ash Spring',6,'ember','ember',1],['Cinder Moon Arch',6,'ember','pebble',0]
+              ].map((entry, index) => ({ name: entry[0], kind: entry[1], theme: entry[2], toy: entry[3], water: !!entry[4], index, batch: Math.floor(index / 10) + 1 }));
+
+              const destinationQuality = (kind, x, z) => {
+                let total = 0;
+                let matching = 0;
+                let snow = 0;
+                let flowers = 0;
+                let usable = 0;
+                for (let dx = -240; dx <= 240; dx += 80) {
+                  for (let dz = -240; dz <= 240; dz += 80) {
+                    const info = game.biomeAt(x + dx, z + dz);
+                    total += 1;
+                    snow += info.snow;
+                    flowers += info.flower;
+                    if (info.ground > -2) usable += 1;
+                    if (kind === 3 ? info.snow > 0.55 : kind === 0 ? info.flower > 0.42 : info.kind === kind) matching += 1;
+                  }
+                }
+                return {
+                  ratio: matching / total,
+                  snow: snow / total,
+                  flowers: flowers / total,
+                  usable: usable / total
+                };
+              };
+
+              const findNearbyBiome = (kind, x, z, index) => {
+                let best = null;
+                let bestScore = -Infinity;
+                for (let radius = 0; radius <= 3400; radius += 96) {
+                  for (let angle = 0; angle < twoPi; angle += 0.38) {
+                    const px = x + Math.cos(angle + index * 0.07) * radius;
+                    const pz = z + Math.sin(angle + index * 0.07) * radius;
+                    const info = game.biomeAt(px, pz);
+                    const match = kind === 3 ? info.snow > 0.5 : kind === 0 ? info.flower > 0.45 : info.kind === kind;
+                    if (!match || info.ground < -2) continue;
+                    const quality = destinationQuality(kind, px, pz);
+                    const targetQuality = kind === 3 ? quality.snow : kind === 0 ? quality.flowers : quality.ratio;
+                    const borderPenalty = kind === 4 || kind === 5 || kind === 6 || kind === 2 ? quality.snow * 230 + Math.max(0, 0.35 - quality.ratio) * 420 : 0;
+                    const score = (kind === info.kind ? 90 : 0) + targetQuality * 650 + quality.usable * 80 + info.ground * 2 - borderPenalty - radius * 0.025;
+                    if (score > bestScore) {
+                      bestScore = score;
+                      best = { x: px, y: info.ground, z: pz, info, quality };
+                    }
+                  }
+                }
+                return best || { x, y: game.biomeAt(x, z).ground, z, info: game.biomeAt(x, z) };
+              };
+
+              const addToy = (group, dest, color, x, y, z, radius, type) => {
+                const mesh = addBlob(group, color, x, y, z, radius, radius, radius, type === 'crystal' ? 0.22 : 0.035, 1);
+                mesh.userData.baseScale = mesh.scale.clone();
+                const toy = {
+                  mesh,
+                  dest,
+                  type,
+                  radius: radius * 1.2,
+                  velocity: new Vec3(0, 0, 0),
+                  spin: new Vec3(hash(x, z, 1) - 0.5, hash(x, z, 2) - 0.5, hash(x, z, 3) - 0.5),
+                  lastSound: 0
+                };
+                toys.push(toy);
+                return toy;
+              };
+
+              const addPalm = (group, x, z, seed, scale = 1, baseY = 0) => {
+                for (let i = 0; i < 5; i += 1) {
+                  addBlob(group, 0x8a6331, x + Math.sin(i * 0.7 + seed) * 0.16, baseY + 0.45 + i * 0.55 * scale, z, 0.32 * scale, 0.46 * scale, 0.32 * scale, 0.01);
+                }
+                for (let i = 0; i < 7; i += 1) {
+                  const a = i / 7 * twoPi;
+                  const leaf = addBlob(group, 0x4e8f3c, x + Math.cos(a) * 0.8 * scale, baseY + 3.3 * scale, z + Math.sin(a) * 0.8 * scale, 1.2 * scale, 0.18 * scale, 0.34 * scale, 0.02);
+                  leaf.rotation.y = -a;
+                  leaf.rotation.z = 0.28;
+                }
+              };
+
+              const addCrystals = (group, color, count, seed) => {
+                for (let i = 0; i < count; i += 1) {
+                  const a = i / count * twoPi + seed;
+                  const r = 2.2 + hash(i, seed, 1) * 5.8;
+                  const h = 0.8 + hash(i, seed, 2) * 2.7;
+                  const crystal = addBlob(group, color, Math.cos(a) * r, h * 0.52, Math.sin(a) * r, 0.22 + h * 0.11, h, 0.22 + h * 0.11, 0.18, 0.9);
+                  crystal.rotation.z = (hash(i, seed, 3) - 0.5) * 0.45;
+                }
+              };
+
+              const addDestinationDetails = (group, spec) => {
+                const base = colorByKind[spec.kind];
+                const accent = accentByKind[spec.kind];
+                addBlob(group, base, 0, -0.06, 0, 9.5, 0.16, 9.5, 0.01, 0.92);
+                addBlob(group, accent, 0, 0.05, 0, 2.2, 0.08, 2.2, 0.04, 0.82);
+                if (spec.water) {
+                  const water = addBlob(group, 0x5ed8ff, 1.6, 0.02, -1.2, 3.8, 0.045, 2.7, 0.18, 0.68);
+                  waters.push({ mesh: water, spec, radius: 5.8, lastSound: 0 });
+                }
+                if (spec.theme === 'oasis' || spec.theme === 'dune' || spec.theme === 'cactus' || spec.theme === 'arch') {
+                  addPalm(group, -3.2, -2.6, spec.index, 0.92);
+                  addPalm(group, 3.8, 2.2, spec.index + 3, 0.72);
+                  for (let i = 0; i < 6; i += 1) addBlob(group, 0x6f7d35, -5 + i * 1.8, 0.42 + (i % 3) * 0.18, 4.4 - (i % 2) * 1.3, 0.18, 0.78, 0.18, 0.02);
+                } else if (spec.theme === 'snow' || spec.theme === 'ice' || spec.theme === 'aurora') {
+                  addCrystals(group, 0xe9fbff, 7, spec.index * 0.2);
+                  addBlob(group, 0xffffff, -3.8, 0.55, 2.8, 0.9, 0.7, 0.9, 0.05);
+                } else if (spec.theme === 'redwood') {
+                  for (let i = 0; i < 7; i += 1) {
+                    const a = i / 7 * twoPi;
+                    addBlob(group, 0x5b3923, Math.cos(a) * (3 + i * 0.2), 1.2, Math.sin(a) * (3 + i * 0.2), 0.55, 2.4 + (i % 3) * 0.7, 0.55, 0.015);
+                  }
+                  addCrystals(group, 0xffd36b, 3, spec.index * 0.2);
+                } else if (spec.theme === 'flower') {
+                  for (let i = 0; i < 18; i += 1) {
+                    const a = i / 18 * twoPi;
+                    const r = 1.6 + hash(i, spec.index, 1) * 6.8;
+                    addBlob(group, i % 3 === 0 ? 0xff6fbc : i % 3 === 1 ? 0xffdf58 : 0x6ba8ff, Math.cos(a) * r, 0.22, Math.sin(a) * r, 0.18, 0.08, 0.18, 0.12);
+                  }
+                } else if (spec.theme === 'highland') {
+                  addBlob(group, 0xf0ce62, 0, 0.18, 0, 7.2, 0.22, 7.2, 0.04, 0.82);
+                  for (let i = 0; i < 12; i += 1) {
+                    const a = i / 12 * twoPi;
+                    const r = 2.2 + hash(i, spec.index, 1) * 5.4;
+                    addBlob(group, i % 2 ? 0xb4a64a : 0x79a848, Math.cos(a) * r, 0.42 + (i % 3) * 0.12, Math.sin(a) * r, 0.5, 0.18, 0.5, 0.07);
+                  }
+                  for (let i = 0; i < 5; i += 1) addBlob(group, 0x8e7444, -4 + i * 2, 0.55 + i * 0.15, 4.2 - (i % 2) * 1.4, 0.62, 0.78, 0.62, 0.03);
+                } else if (spec.theme === 'crystal' || spec.theme === 'marsh') {
+                  addCrystals(group, 0x77fff0, 12, spec.index * 0.2);
+                  for (let i = 0; i < 9; i += 1) addBlob(group, 0x154f56, Math.cos(i) * 5.8, 0.5, Math.sin(i * 1.7) * 5.8, 0.14, 0.95, 0.14, 0.08);
+                } else {
+                  addCrystals(group, 0xff9a4e, 10, spec.index * 0.2);
+                  for (let i = 0; i < 6; i += 1) addBlob(group, 0x1b1820, Math.cos(i) * 5, 0.75, Math.sin(i) * 5, 0.7, 1.4, 0.7, 0.02);
+                }
+                for (let i = 0; i < 4; i += 1) {
+                  const a = i / 4 * twoPi + hash(i, spec.index, 4);
+                  addToy(group, null, spec.toy === 'snowball' ? 0xffffff : spec.toy === 'coconut' ? 0x8b5a2b : spec.toy === 'crystal' ? 0xb9fff8 : spec.toy === 'ember' ? 0xff8848 : accent, Math.cos(a) * (1.4 + i), 0.42, Math.sin(a) * (1.4 + i), 0.32 + (i % 2) * 0.14, spec.toy);
+                }
+                for (let i = 0; i < 8; i += 1) {
+                  const mote = addBlob(group, accent, Math.cos(i) * 2.2, 1.8 + hash(i, spec.index, 5) * 2, Math.sin(i * 2.1) * 2.2, 0.05, 0.05, 0.05, 0.35, 0.65, tinyTemplate);
+                  mote.userData.floatPhase = hash(i, spec.index, 6) * twoPi;
+                }
+              };
+
+              const clearGroup = (group) => {
+                while (group.children.length) group.remove(group.children[group.children.length - 1]);
+              };
+
+              const rebuildBiomeAccentField = () => {
+                const player = game.player.position;
+                const info = game.biomeAt(player.x, player.z);
+                const key = `${info.kind}:${Math.round(player.x / 130)}:${Math.round(player.z / 130)}`;
+                if (key === game.__biomeAccentKey) return;
+                game.__biomeAccentKey = key;
+                clearGroup(accentRoot);
+                const ground = game.biomeAt(player.x, player.z).ground;
+                accentRoot.position.set(player.x, ground + 0.18, player.z);
+                const addRingBlob = (color, i, radius, height, sx, sy, sz, glow = 0.03, opacity = 1) => {
+                  const a = i / 18 * twoPi + hash(i, info.kind, 8) * 0.65;
+                  const r = radius + hash(i, info.kind, 9) * 11;
+                  return addBlob(accentRoot, color, Math.cos(a) * r, height, Math.sin(a) * r, sx, sy, sz, glow, opacity);
+                };
+                if (info.kind === 4) {
+                  for (let i = 0; i < 8; i += 1) addRingBlob(0x6f7d35, i, 12, 0.9 + (i % 3) * 0.55, 0.3, 1.2 + (i % 2) * 0.65, 0.3, 0.03);
+                  addPalm(accentRoot, -9, 7, 901, 0.95);
+                  addPalm(accentRoot, 10, -5, 902, 0.75);
+                  addBlob(accentRoot, 0x5ed8ff, 0, 0.12, 0, 5.5, 0.04, 3.8, 0.18, 0.64);
+                  addBlob(accentRoot, 0xf3d783, 0, -0.04, 0, 18, 0.08, 18, 0.01, 0.62);
+                } else if (info.kind === 5) {
+                  for (let i = 0; i < 14; i += 1) addRingBlob(i % 2 ? 0xbffff8 : 0x39e6db, i, 7, 1.1 + i * 0.16, 0.36, 1.8 + (i % 5) * 0.45, 0.36, 0.24, 0.84);
+                  for (let i = 0; i < 10; i += 1) addRingBlob(0x154f56, i + 20, 16, 0.55, 0.13, 1.05, 0.13, 0.08);
+                  addBlob(accentRoot, 0x55e9df, 0, 0.04, 0, 9, 0.035, 6, 0.17, 0.5);
+                } else if (info.kind === 6) {
+                  for (let i = 0; i < 12; i += 1) addRingBlob(i % 3 ? 0x1a171e : 0xff9a4e, i, 9, 0.75 + (i % 4) * 0.45, 0.75, 1.1, 0.75, i % 3 ? 0.03 : 0.34);
+                  addBlob(accentRoot, 0xff9a4e, 2, 0.08, -1.5, 6.2, 0.035, 3.4, 0.35, 0.42);
+                } else if (info.kind === 3 || info.snow > 0.5) {
+                  for (let i = 0; i < 13; i += 1) addRingBlob(i % 2 ? 0xffffff : 0xbfe7ff, i, 8, 0.7 + (i % 4) * 0.32, 0.6, 0.85, 0.6, 0.07);
+                  addBlob(accentRoot, 0xffffff, 0, -0.03, 0, 17, 0.08, 17, 0.03, 0.54);
+                } else if (info.kind === 1) {
+                  for (let i = 0; i < 9; i += 1) addRingBlob(0x5b3923, i, 10, 2.6, 0.42, 3.2 + (i % 4), 0.42, 0.02);
+                  for (let i = 0; i < 8; i += 1) addRingBlob(0x1e5b31, i + 13, 7, 0.55, 1.15, 0.22, 0.72, 0.04);
+                } else if (info.kind === 0 || info.flower > 0.35) {
+                  for (let i = 0; i < 24; i += 1) addRingBlob(i % 3 === 0 ? 0xff72b0 : i % 3 === 1 ? 0xffe26f : 0x7cb9ff, i, 5, 0.24, 0.23, 0.09, 0.23, 0.15);
+                  addBlob(accentRoot, 0x55b84d, 0, -0.03, 0, 15, 0.06, 15, 0.02, 0.44);
+                } else if (info.kind === 2) {
+                  for (let i = 0; i < 16; i += 1) addRingBlob(i % 2 ? 0xf0ce62 : 0x79a848, i, 6, 0.34 + (i % 4) * 0.08, 0.58, 0.18, 0.58, 0.08);
+                  for (let i = 0; i < 5; i += 1) addRingBlob(0x8e7444, i + 20, 11, 0.65 + i * 0.1, 0.75, 0.75, 0.75, 0.03);
+                  addBlob(accentRoot, 0xf0ce62, 0, -0.03, 0, 16, 0.06, 16, 0.03, 0.42);
+                } else {
+                  for (let i = 0; i < 11; i += 1) addRingBlob(i % 2 ? 0xf0ce62 : 0x79a848, i, 7, 0.36, 0.45, 0.18, 0.45, 0.06);
+                }
+                document.documentElement.dataset.glideAccentKind = String(info.kind);
+              };
+
+              const clampPlayerAboveGround = () => {
+                if (game.player.state === 'air' || game.player.state === 'climb') return;
+                const player = game.player.position;
+                const ground = game.biomeAt(player.x, player.z).ground;
+                const floor = ground + 0.28;
+                if (player.y < floor) {
+                  player.y = floor;
+                  if (game.player.velocity?.y < 0) game.player.velocity.y = 0;
+                  document.documentElement.dataset.glideGroundClamp = '1';
+                }
+              };
+
+              const moveToDestinationHash = () => {
+                if (!destinations.length) return;
+                const routes = { oasis: 0, redwood: 20, flowers: 30, flowerwood: 30, golden: 35, highland: 35, crystal: 40, ember: 45 };
+                const hashName = (location.hash || '').replace('#', '').toLowerCase();
+                const index = routes[hashName];
+                if (index === undefined) {
+                  if (game.__lastDestinationHash) {
+                    game.__lastDestinationHash = '';
+                    document.documentElement.dataset.glideDestinationRoute = '';
+                  }
+                  return;
+                }
+                if (game.__lastDestinationHash === hashName) return;
+                const dest = destinations[index];
+                if (!dest) return;
+                game.__lastDestinationHash = hashName;
+                let routeOffsetX = dest.spec.kind === 6 ? 10.5 : dest.spec.kind === 5 ? 5.2 : 3.4;
+                let routeOffsetZ = dest.spec.kind === 6 ? -8.5 : dest.spec.kind === 5 ? 5.8 : 4.2;
+                if (dest.spec.kind === 4) {
+                  const toyAngle = hash(0, dest.spec.index, 4);
+                  routeOffsetX = Math.cos(toyAngle) * 1.5 + 0.35;
+                  routeOffsetZ = Math.sin(toyAngle) * 1.5 + 0.35;
+                }
+                game.player.position.set(dest.pos.x + routeOffsetX, dest.pos.y + 1.2, dest.pos.z + routeOffsetZ);
+                game.player.state = 'ground';
+                game.player.roll = 0;
+                game.player.pitch = 0;
+                game.player.velocity?.set?.(0, 0, 0);
+                game.player.facing = dest.spec.kind === 6 ? 0.7 : dest.spec.kind === 4 ? -0.25 : 0.35;
+                if (game.world.update) game.world.update(game.player.position);
+                if (game.world.buildAllPending) game.world.buildAllPending();
+                if (game.sky?.setTime) {
+                  game.sky.setTime(dest.spec.kind === 6 ? 0.55 : dest.spec.kind === 3 ? 0.44 : dest.spec.kind === 5 ? 0.46 : 0.57);
+                  game.sky.dayLength = 1000000000;
+                }
+                if (game.camera) {
+                  game.camera.distance = dest.spec.kind === 5 ? 4.8 : dest.spec.kind === 6 ? 3.7 : dest.spec.kind === 4 ? 6.1 : dest.spec.kind === 1 ? 6.2 : 6.8;
+                  game.camera.pitch = dest.spec.kind === 6 ? 0.44 : dest.spec.kind === 5 ? 0.36 : dest.spec.kind === 4 ? 0.34 : 0.26;
+                  game.camera.yaw = game.player.facing + (dest.spec.kind === 6 ? -1.35 : dest.spec.kind === 5 ? 1.1 : 0.45);
+                  game.camera._initialized = false;
+                }
+                document.documentElement.dataset.glideDestinationRoute = `${hashName}:${dest.spec.name}`;
+                game.__biomeAccentKey = '';
+              };
+
+              const placeDestinations = () => {
+                if (destinations.length) return;
+                const origin = vistaOrigin || findVistaOrigin();
+                destinationSpecs.forEach((spec, index) => {
+                  const angle = index / destinationSpecs.length * twoPi + (index % 5) * 0.08;
+                  const radius = 420 + (index % 10) * 135 + spec.batch * 95;
+                  const target = findNearbyBiome(spec.kind, origin.x + Math.cos(angle) * radius, origin.z + Math.sin(angle) * radius, index);
+                  const group = new Group();
+                  group.position.set(target.x, target.y + 0.28, target.z);
+                  group.rotation.y = -angle;
+                  destinationRoot.add(group);
+                  addDestinationDetails(group, spec);
+                  const dest = { spec, group, pos: group.position.clone(), radius: 13 + (index % 4), discovered: false, pulse: 0, thermal: spec.theme === 'arch' || spec.theme === 'aurora' || spec.theme === 'crystal' || spec.theme === 'ember' };
+                  destinations.push(dest);
+                  toys.forEach((toy) => {
+                    if (!toy.dest) toy.dest = dest;
+                  });
+                  if (dest.thermal) thermals.push({ dest, radius: 18, lastSound: 0 });
+                });
+              };
+
+              const updateFakeTrees = () => {
+                if (!game.world.activeTrees || !fakeTrees.length) return;
+                fakeTrees.forEach((tree) => {
+                  if (!game.world.activeTrees.includes(tree)) game.world.activeTrees.push(tree);
+                });
+              };
+
+              const moveToys = (dt, now) => {
+                const player = game.player.position;
+                toys.forEach((toy) => {
+                  const dest = toy.dest;
+                  if (!dest || !dest.group.visible) return;
+                  const worldX = dest.pos.x + toy.mesh.position.x;
+                  const worldZ = dest.pos.z + toy.mesh.position.z;
+                  const dx = worldX - player.x;
+                  const dz = worldZ - player.z;
+                  const d = Math.hypot(dx, dz) || 1;
+                  if (d < toy.radius + 1.05 && Math.abs((dest.pos.y + toy.mesh.position.y) - player.y) < 2.6) {
+                    const shove = 9.5 + Math.min(12, game.player.speed || 0);
+                    toy.velocity.x += dx / d * shove * dt * 5;
+                    toy.velocity.z += dz / d * shove * dt * 5;
+                    toy.velocity.y += 2.2 * dt;
+                    dest.pulse = 1;
+                    game.__toyTouches = (game.__toyTouches || 0) + 1;
+                    document.documentElement.dataset.glideToyTouches = String(game.__toyTouches);
+                    if (now - toy.lastSound > 260) {
+                      toy.lastSound = now;
+                      play(toy.type === 'snowball' ? 'rustle' : 'touch', toy.dest.spec.index);
+                      game.camera?.addShake?.(0.04);
+                    }
+                  }
+                  toy.velocity.y -= 9.8 * dt;
+                  toy.mesh.position.x += toy.velocity.x * dt;
+                  toy.mesh.position.y += toy.velocity.y * dt;
+                  toy.mesh.position.z += toy.velocity.z * dt;
+                  const ground = 0.28 + toy.radius * 0.48;
+                  if (toy.mesh.position.y < ground) {
+                    toy.mesh.position.y = ground;
+                    toy.velocity.y = Math.abs(toy.velocity.y) * 0.22;
+                    toy.velocity.x *= 0.9;
+                    toy.velocity.z *= 0.9;
+                  }
+                  const localD = Math.hypot(toy.mesh.position.x, toy.mesh.position.z);
+                  if (localD > dest.radius) {
+                    toy.mesh.position.x *= dest.radius / localD;
+                    toy.mesh.position.z *= dest.radius / localD;
+                    toy.velocity.x *= -0.35;
+                    toy.velocity.z *= -0.35;
+                  }
+                  toy.velocity.x *= Math.exp(-1.7 * dt);
+                  toy.velocity.z *= Math.exp(-1.7 * dt);
+                  toy.mesh.rotation.x += toy.velocity.z * dt * 1.8 + toy.spin.x * dt;
+                  toy.mesh.rotation.z -= toy.velocity.x * dt * 1.8 + toy.spin.z * dt;
+                });
+              };
+
+              const updateExpansion = (now) => {
+                const dt = Math.min(0.05, Math.max(0, ((game.__expLast || now) - now) / -1000));
+                game.__expLast = now;
+                updateFakeTrees();
+                movePlayerToPerch();
+                placeDestinations();
+                moveToDestinationHash();
+                rebuildBiomeAccentField();
+                clampPlayerAboveGround();
+
+                const player = game.player.position;
+                let found = 0;
+                destinations.forEach((dest) => {
+                  const distance = distXZ(player, dest.pos);
+                  dest.group.visible = distance < 520 || dest.spec.batch === 1;
+                  if (distance < dest.radius && !dest.discovered) {
+                    dest.discovered = true;
+                    dest.pulse = 1;
+                    play('discover', dest.spec.index);
+                    game.camera?.addShake?.(0.18);
+                  }
+                  if (dest.discovered) found += 1;
+                  dest.pulse *= Math.exp(-2.8 * dt);
+                  if (!dest.group.visible && distance > 650) return;
+                  const glow = dest.discovered ? 1 : distance < 42 ? 0.65 : 0.25;
+                  dest.group.children.forEach((child, childIndex) => {
+                    if (child.userData?.floatPhase !== undefined) {
+                      child.position.y += Math.sin(now * 0.0018 + child.userData.floatPhase) * 0.004;
+                    }
+                    if (child.material?.emissiveIntensity !== undefined) {
+                      child.material.emissiveIntensity = Math.min(0.85, (child.material.emissiveIntensity || 0) * 0.94 + glow * 0.012 + dest.pulse * 0.08 + (childIndex % 9 === 0 ? 0.02 : 0));
+                    }
+                  });
+                  dest.group.scale.setScalar(1 + dest.pulse * 0.035);
+                });
+
+                waters.forEach((water) => {
+                  const dest = destinations[water.spec.index];
+                  if (!dest) return;
+                  const d = distXZ(player, dest.pos);
+                  water.mesh.rotation.y += dt * 0.08;
+                  if (d < water.radius && now - water.lastSound > 1100) {
+                    water.lastSound = now;
+                    game.__waterSplashes = (game.__waterSplashes || 0) + 1;
+                    document.documentElement.dataset.glideWaterSplashes = String(game.__waterSplashes);
+                    play('water', water.spec.index);
+                    game.camera?.addShake?.(0.025);
+                  }
+                });
+
+                thermals.forEach((thermal) => {
+                  const d = distXZ(player, thermal.dest.pos);
+                  if (d < thermal.radius && game.player.state === 'air') {
+                    game.player.velocity.y += (1 - d / thermal.radius) * 10 * dt;
+                    if (now - thermal.lastSound > 1700) {
+                      thermal.lastSound = now;
+                      game.__thermalLifts = (game.__thermalLifts || 0) + 1;
+                      document.documentElement.dataset.glideThermalLifts = String(game.__thermalLifts);
+                      play('lift', thermal.dest.spec.index);
+                    }
+                  }
+                });
+
+                fluffRoot.children.forEach((puff) => {
+                  if (!puff.userData.home) return;
+                  puff.position.copy(puff.userData.home);
+                  puff.position.y += Math.sin(now * 0.004 + puff.userData.phase) * (puff.userData.bob || 0.0035);
+                });
+
+                moveToys(dt, now);
+                document.documentElement.dataset.glideDestinationCount = String(destinations.length);
+                document.documentElement.dataset.glideDestinationFound = String(found);
+                document.documentElement.dataset.glideToyCount = String(toys.length);
+                document.documentElement.dataset.glideBiomeLabels = biomeNames.join('|');
+                document.documentElement.dataset.glideHighPerch = game.__startedAtHighPerch ? '1' : '0';
+                document.documentElement.dataset.glideFluff = String(fluffRoot.children.length);
+                requestAnimationFrame(updateExpansion);
+              };
+
+              installPause();
+              installFluff();
+              buildLaunchPerch();
+              requestAnimationFrame(updateExpansion);
+              game.__worldExpansion = { root, destinationRoot, accentRoot, destinations, toys, waters, thermals, biomeNames, fakeTrees };
+            };
+
+            const installBiomeRoutes = () => {
+              const game = window.__GAME;
+              if (!game || !game.player || !game.world || !game.biomeAt || !game.findBiome || !game.sampleBiomes) {
+                requestAnimationFrame(installBiomeRoutes);
+                return;
+              }
+              if (game.__biomeRoutesInstalled) return;
+              game.__biomeRoutesInstalled = true;
+
+              let lastAppliedRoute = '';
+              const resolveRoute = () => {
+                const current = (location.hash || '').replace('#', '').toLowerCase();
+                if (current === 'snowforest' || current === 'snowy' || current === 'snow' || current === 'winter') return { kind: 3, mode: current };
+                if (current === 'creek' || current === 'summer') return { kind: 1, mode: current };
+                if (current === 'spring') return { kind: 0, mode: current };
+                if (current === 'golden-biome' || current === 'mesa') return { kind: 2, mode: current };
+                if (current === 'desert' || current === 'dunes') return { kind: 4, mode: current };
+                if (current === 'marsh' || current === 'reeds') return { kind: 5, mode: current };
+                if (current === 'volcanic' || current === 'cinder') return { kind: 6, mode: current };
+                if (current === 'biomes' || current === 'showcase') return { kind: 3, mode: current };
+                return { kind: null, mode: current || 'play' };
+              };
+
+              const matchesRouteBiome = (kind, info, soft = false) => {
+                if (!info) return false;
+                if (kind === 3) return info.snow > (soft ? 0.42 : 0.92);
+                if (kind === 0) return info.flower > (soft ? 0.38 : 0.72);
+                if (kind === 4 || kind === 5 || kind === 6) return info.kind === kind;
+                return info.kind === kind;
+              };
+
+              const localBiomeScore = (kind, x, z) => {
+                let total = 0;
+                let matching = 0;
+                let snow = 0;
+                let flowers = 0;
+                let usableGround = 0;
+                for (let dx = -256; dx <= 256; dx += 64) {
+                  for (let dz = -256; dz <= 256; dz += 64) {
+                    const info = game.biomeAt(x + dx, z + dz);
+                    total += 1;
+                    snow += info.snow;
+                    flowers += info.flower;
+                    if (info.ground > -2) usableGround += 1;
+                    if (matchesRouteBiome(kind, info, true)) matching += 1;
+                  }
+                }
+                return {
+                  ratio: total ? matching / total : 0,
+                  snow: total ? snow / total : 0,
+                  flowers: total ? flowers / total : 0,
+                  ground: total ? usableGround / total : 0
+                };
+              };
+
+              const findInteriorBiome = (kind) => {
+                const originX = game.player.position.x;
+                const originZ = game.player.position.z;
+                let best = null;
+                let bestScore = -Infinity;
+                for (let radius = 0; radius <= 5600; radius += 96) {
+                  const angleStep = radius < 400 ? 0.35 : 0.22;
+                  for (let angle = 0; angle < Math.PI * 2; angle += angleStep) {
+                    const x = originX + Math.cos(angle) * radius;
+                    const z = originZ + Math.sin(angle) * radius;
+                    const center = game.biomeAt(x, z);
+                    const minGround = kind === 1 ? 1.2 : -2;
+                    if (!matchesRouteBiome(kind, center, false) || center.ground <= minGround) continue;
+                    const local = localBiomeScore(kind, x, z);
+                    const character = kind === 3 ? local.snow : kind === 0 ? local.flowers : local.ratio;
+                    const score = local.ratio * 900 + character * 260 + local.ground * 80 - radius * 0.018;
+                    if (score > bestScore) {
+                      bestScore = score;
+                      best = {
+                        x,
+                        y: center.ground,
+                        z,
+                        kind: center.kind,
+                        snow: center.snow,
+                        flower: center.flower,
+                        ratio: local.ratio,
+                        score
+                      };
+                    }
+                  }
+                }
+                return best || game.findBiome(kind, originX, originZ);
+              };
+
+              const applyRoute = (route) => {
+                if (route.kind === null) return;
+                const target = findInteriorBiome(route.kind);
+                if (!target) return;
+                game.player.position.x = target.x;
+                game.player.position.y = target.y + 0.28;
+                game.player.position.z = target.z;
+                game.player.state = 'ground';
+                game.player.roll = 0;
+                game.player.pitch = 0;
+                game.player.facing = route.kind === 1 ? 0.35 : 0;
+                if (game.player.velocity?.set) game.player.velocity.set(0, 0, 0);
+                if (game.world.update) game.world.update(game.player.position);
+                if (game.world.buildAllPending) game.world.buildAllPending();
+                if (game.sky && game.sky.setTime) {
+                  game.sky.setTime(route.kind === 3 ? 0.44 : route.kind === 1 ? 0.54 : route.kind === 4 ? 0.57 : route.kind === 5 ? 0.46 : route.kind === 6 ? 0.56 : 0.5);
+                  game.sky.dayLength = 1000000000;
+                }
+                if (game.weather) {
+                  game.weather.snowing = route.kind === 3 ? 1 : 0;
+                  game.weather._cloudTarget = game.weather.cloudiness = route.kind === 3 ? 0.64 : route.kind === 1 || route.kind === 4 ? 0.04 : route.kind === 5 ? 0.28 : 0.14;
+                  game.weather._wetTarget = game.weather.wetness = 0;
+                  game.weather._timer = 1000000000;
+                }
+                if (game.camera) {
+                  game.camera.yaw = route.kind === 1 ? 0.35 : route.kind === 4 ? -0.25 : route.kind === 6 ? 0.75 : 0;
+                  game.camera.pitch = route.kind === 3 ? 0.2 : route.kind === 1 ? 0.12 : route.kind === 4 ? 0.18 : 0.24;
+                  game.camera.distance = route.kind === 1 ? 6.2 : route.kind === 4 ? 8.4 : 7.2;
+                  game.camera._initialized = false;
+                }
+              };
+
+              const updateBiomeDiagnostics = () => {
+                const route = resolveRoute();
+                const routeKey = `${route.mode}:${route.kind}`;
+                if (route.kind !== null && routeKey !== lastAppliedRoute) {
+                  applyRoute(route);
+                  lastAppliedRoute = routeKey;
+                } else if (route.kind === null) {
+                  lastAppliedRoute = '';
+                }
+                const sample = game.sampleBiomes(game.player.position.x, game.player.position.z, 288, 32);
+                const here = game.biomeAt(game.player.position.x, game.player.position.z);
+                document.documentElement.dataset.glideBiomeHere = JSON.stringify(here);
+                document.documentElement.dataset.glideBiomeCounts = sample.counts.join(',');
+                document.documentElement.dataset.glideBiomes = sample.counts.map((count, index) => `${index}:${count}`).join('|');
+                document.documentElement.dataset.glideBiomeMode = route.mode;
+                requestAnimationFrame(updateBiomeDiagnostics);
+              };
+              requestAnimationFrame(updateBiomeDiagnostics);
+            };
+
+            const publishHealth = () => {
+              const game = window.__GAME;
+              if (game && game.player && game.debugInfo) {
+                try {
+                  const info = game.debugInfo();
+                  const rootData = document.documentElement.dataset;
+                  rootData.glideReady = '1';
+                  rootData.glideState = String(info.state || '');
+                  rootData.glideSpeed = String(info.speed ?? '');
+                  rootData.glideChunks = String(info.chunks ?? '');
+                  rootData.glideTrees = String(info.trees ?? '');
+                  rootData.glideCalls = String(info.calls ?? '');
+                  rootData.glideDayAmount = String(info.dayAmount ?? '');
+                  rootData.glideUpright = game.__uprightGlidePatched ? '1' : '0';
+                  rootData.glideSecret = game.__secretForestInstalled ? '1' : '0';
+                  rootData.glideSecretSites = String(game.__secretForest?.sites?.length ?? 0);
+                  rootData.glideBiomes = document.documentElement.dataset.glideBiomes || '';
+                  rootData.glideBiomeMode = document.documentElement.dataset.glideBiomeMode || '';
+                  rootData.glideRoll = String(Math.round((game.player.roll || 0) * 1000) / 1000);
+                  rootData.glidePitch = String(Math.round((game.player.pitch || 0) * 1000) / 1000);
+                  rootData.glideY = String(Math.round((game.player.position?.y || 0) * 100) / 100);
+                } catch (error) {
+                  rememberRuntimeError(error && error.message || error);
+                }
+              }
+              requestAnimationFrame(publishHealth);
+            };
+
+            requestAnimationFrame(patchUprightGlide);
+            requestAnimationFrame(installSecretForest);
+            requestAnimationFrame(installWorldExpansion);
+            requestAnimationFrame(installBiomeRoutes);
+            requestAnimationFrame(publishHealth);
+          });
+          document.head.appendChild(script);
+        } else {
+          showFallback('WebGL is not available here, so the forest cannot render on this device/browser.');
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <a class="home-link" href="/">← Qualiacology</a>
+    <div id="app"></div>
+    <div id="fallback" hidden aria-live="polite">
+      <div class="fallback-card">
+        <h1>Glide couldn’t launch</h1>
+        <p data-fallback-detail>Glide needs WebGL. This device/browser refused to make the tiny forest engine breathe.</p>
+        <a href="/">Back to Qualiacology</a>
+      </div>
+    </div>
+    <div id="veil"><div class="orb"></div></div>
+    <div id="cozy"></div>
+    <div id="idle"></div>
+    <div id="photo"><div class="bar top"></div><div class="bar bottom"></div></div>
+    <button id="shutter" type="button" aria-label="capture"></button>
+    <div id="flash"></div>
+    <div id="hint">
+      <!-- WASD glyph -->
+      <svg viewBox="0 0 120 80" fill="none">
+        <g fill="rgba(255,255,255,0.92)" stroke="rgba(0,0,0,0.25)" stroke-width="2">
+          <rect x="44" y="4"  width="32" height="32" rx="6"/>
+          <rect x="4"  y="44" width="32" height="32" rx="6"/>
+          <rect x="44" y="44" width="32" height="32" rx="6"/>
+          <rect x="84" y="44" width="32" height="32" rx="6"/>
+        </g>
+        <g fill="rgba(80,90,70,0.9)">
+          <path d="M60 14l7 9h-14z"/>
+          <path d="M20 54l7 9h-14z" transform="rotate(-90 20 60)"/>
+          <path d="M60 54l7 9h-14z" transform="rotate(180 60 60)"/>
+          <path d="M100 54l7 9h-14z" transform="rotate(90 100 60)"/>
+        </g>
+      </svg>
+      <!-- mouse glyph -->
+      <svg viewBox="0 0 60 80" fill="none">
+        <rect x="14" y="6" width="32" height="50" rx="16" fill="rgba(255,255,255,0.92)" stroke="rgba(0,0,0,0.25)" stroke-width="2"/>
+        <line x1="30" y1="10" x2="30" y2="26" stroke="rgba(0,0,0,0.25)" stroke-width="2"/>
+        <path d="M30 64 q-10 6 -16 12 M30 64 q10 6 16 12" stroke="rgba(255,255,255,0.85)" stroke-width="3" fill="none" stroke-linecap="round"/>
+      </svg>
+    </div>
+  </body>
+</html>

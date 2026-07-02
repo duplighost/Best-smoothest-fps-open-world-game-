@@ -1,0 +1,21 @@
+{
+  "name": "LUMA — living visualizer",
+  "short_name": "LUMA",
+  "description": "A living, music- and touch-reactive visualizer. Lose yourself.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": ["fullscreen", "standalone"],
+  "orientation": "any",
+  "background_color": "#05060a",
+  "theme_color": "#05060a",
+  "categories": ["entertainment", "music", "graphics"],
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

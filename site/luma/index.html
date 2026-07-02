@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#05060a" />
+  <meta name="description" content="LUMA — a living, music- and touch-reactive visualizer. Lose yourself." />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="LUMA" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Qualiacology" />
+  <meta property="og:title" content="LUMA | Qualiacology" />
+  <meta property="og:description" content="A living field of light that moves on its own and comes alive to your music or microphone." />
+  <meta property="og:url" content="https://qualiacology.com/luma/" />
+  <meta property="og:image" content="https://qualiacology.com/assets/toy-luma.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="LUMA | Qualiacology" />
+  <meta name="twitter:description" content="A living field of light that moves on its own and comes alive to your music or microphone." />
+  <meta name="twitter:image" content="https://qualiacology.com/assets/toy-luma.jpg" />
+  <link rel="canonical" href="https://qualiacology.com/luma/" />
+  <link rel="icon" href="/assets/favicon.svg" />
+  <title>LUMA | Qualiacology</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <a class="home-link home-link-top" href="/">← Qualiacology</a>
+  <div id="app">
+    <canvas id="gl"></canvas>
+
+    <div id="ui">
+      <div id="stats" class="stats"></div>
+
+      <div id="hint" class="hint">drag to play · tap the note for your music</div>
+
+      <div id="controls">
+        <button id="mic" class="round" type="button" aria-label="Use microphone">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        </button>
+        <button id="music" class="round" type="button" aria-label="Play a track">
+          <svg viewBox="0 0 24 24" width="20" height="20"><path d="M9 18V6l10-2v12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.6" fill="currentColor"/><circle cx="16.5" cy="16" r="2.6" fill="currentColor"/></svg>
+        </button>
+        <button id="play" class="round" type="button" aria-label="Play / pause" hidden>
+          <svg viewBox="0 0 24 24" width="20" height="20"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <div id="error" class="error">
+      <div class="error-box">
+        <h2>Couldn't start the visualizer</h2>
+        <p class="error-msg"></p>
+        <p class="error-sub">This needs WebGL2 — try an up-to-date Chrome, Safari, Edge or Firefox.</p>
+        <p><a class="home-link" href="/">Back to Qualiacology</a></p>
+      </div>
+    </div>
+
+    <input id="file" type="file" accept="audio/*" hidden />
+  </div>
+
+  <script src="js/util.js"></script>
+  <script src="js/gl.js"></script>
+  <script src="js/shaders.js"></script>
+  <script src="js/audio.js"></script>
+  <script src="js/input.js"></script>
+  <script src="js/director.js"></script>
+  <script src="js/particles.js"></script>
+  <script src="js/renderer.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    // LUMA now runs as a normal hosted toy. Older uploads shipped a cache-first
+    // service worker, so this page actively removes that registration and its
+    // caches instead of letting stale files puppeteer the new build.
+    if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.getRegistrations?.().then((registrations) => {
+          registrations.forEach((registration) => {
+            try {
+              if (new URL(registration.scope).pathname.startsWith("/luma/")) {
+                registration.unregister().catch(() => {});
+              }
+            } catch (_) {}
+          });
+        }).catch(() => {});
+        if (window.caches?.keys) {
+          caches.keys().then((keys) => {
+            keys.forEach((key) => {
+              if (/luma/i.test(key)) caches.delete(key).catch(() => {});
+            });
+          }).catch(() => {});
+        }
+      });
+    }
+  </script>
+</body>
+</html>

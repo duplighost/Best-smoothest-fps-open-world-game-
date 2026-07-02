@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Qualiacology Dispensary</title>
+  <meta name="description" content="Dept. of Impossible Pharmacology. Press the capsule and receive a prescription for a compound that doesn't exist yet — full nomenclature, mechanism of action, boxed warnings, and a pharmacist who is licensed nowhere." />
+  <meta name="theme-color" content="#11382F" />
+  <meta name="robots" content="index, follow" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="The Qualiacology Dispensary" />
+  <meta property="og:description" content="Compounds for conditions that don't exist yet. Press the capsule. Tell no one your symptoms — the formulary already knows." />
+  <meta property="og:url" content="https://qualiacology.com/dispensary/" />
+  <meta property="og:image" content="https://qualiacology.com/assets/og/dispensary-og-v280.png" />
+  <meta property="og:image:secure_url" content="https://qualiacology.com/assets/og/dispensary-og-v280.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="The Qualiacology Dispensary preview image" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="The Qualiacology Dispensary" />
+  <meta name="twitter:description" content="Compounds for conditions that don't exist yet. Press the capsule." />
+  <meta name="twitter:image" content="https://qualiacology.com/assets/og/dispensary-og-v280.png" />
+  <meta name="twitter:image:alt" content="The Qualiacology Dispensary preview image" />
+  <link rel="canonical" href="https://qualiacology.com/dispensary/" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%92%8A%3C/text%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,900;1,9..144,500&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,700;1,400&family=Caveat:wght@500;600&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      color-scheme: dark;
+      --bottle-glass: #11382F;
+      --bottle-deep: #0B2620;
+      --label-cream: #F7EFE0;
+      --label-edge: #E7DCC6;
+      --ink: #221E19;
+      --ink-soft: #5A5247;
+      --cherry: #C5372C;
+      --amber: #D89A3D;
+      --pill-white: #FBF6EC;
+      --shelf-text: #A8C4B8;
+      --shelf-dim: #6E8E81;
+      --mono: 'IBM Plex Mono', ui-monospace, 'Courier New', monospace;
+      --display: 'Fraunces', Georgia, serif;
+      --hand: 'Caveat', cursive;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(ellipse at 50% -10%, var(--bottle-glass) 0%, var(--bottle-deep) 75%);
+      color: var(--label-cream);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 22px 16px 64px;
+      font-family: var(--mono);
+    }
+
+    ::selection { background: rgba(216, 154, 61, 0.4); color: var(--pill-white); }
+
+    a { color: var(--amber); }
+    a:focus-visible, button:focus-visible {
+      outline: 3px solid var(--amber);
+      outline-offset: 5px;
+      border-radius: 6px;
+    }
+
+    /* ── back link ─────────────────────────────────── */
+    .home-link {
+      align-self: flex-start;
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--shelf-text);
+      border: 1px solid rgba(168, 196, 184, 0.3);
+      border-radius: 999px;
+      padding: 7px 14px;
+      margin-bottom: 26px;
+      transition: color 160ms ease, border-color 160ms ease;
+    }
+    .home-link:hover { color: var(--amber); border-color: var(--amber); }
+
+    /* ── header ────────────────────────────────────── */
+    header { text-align: center; margin-bottom: 30px; max-width: 600px; }
+
+    .eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--amber);
+      margin: 0 0 12px;
+    }
+
+    h1 {
+      font-family: var(--display);
+      font-weight: 900;
+      font-size: clamp(34px, 8vw, 56px);
+      line-height: 1.0;
+      margin: 0;
+      color: var(--label-cream);
+    }
+
+    .tagline {
+      font-family: var(--display);
+      font-style: italic;
+      font-weight: 500;
+      font-size: 16px;
+      color: var(--shelf-text);
+      margin: 14px 0 0;
+    }
+
+    /* ── capsule button ────────────────────────────── */
+    .capsule {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+      margin-bottom: 34px;
+    }
+    .capsule-body {
+      display: flex;
+      border-radius: 999px;
+      overflow: hidden;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5),
+                  inset 0 2px 3px rgba(255, 255, 255, 0.35),
+                  inset 0 -3px 5px rgba(0, 0, 0, 0.25);
+      transition: transform 80ms ease;
+    }
+    .capsule:hover .capsule-body { transform: translateY(-1px); }
+    .capsule:active .capsule-body { transform: translateY(3px) scale(0.97); }
+    .capsule-half {
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 0.22em;
+    }
+    .capsule-half.white { background: var(--pill-white); color: var(--ink); padding: 16px 18px 16px 30px; }
+    .capsule-half.cherry { background: var(--cherry); color: var(--pill-white); padding: 16px 30px 16px 18px; }
+
+    /* ── tray / label ──────────────────────────────── */
+    main { width: 100%; max-width: 480px; min-height: 120px; }
+
+    .restock {
+      text-align: center;
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      color: var(--amber);
+      margin-bottom: 14px;
+    }
+
+    .empty-tray {
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.8;
+      color: #7FA496;
+      border: 1px dashed rgba(168, 196, 184, 0.35);
+      border-radius: 8px;
+      padding: 34px 24px;
+    }
+
+    @keyframes qd-print {
+      0%   { opacity: 0; transform: translateY(-26px) scale(0.985); }
+      60%  { opacity: 1; }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    @keyframes qd-stamp-in {
+      0%   { opacity: 0; transform: rotate(8deg) scale(2.1); }
+      70%  { opacity: 0.95; transform: rotate(8deg) scale(0.94); }
+      100% { opacity: 0.92; transform: rotate(8deg) scale(1); }
+    }
+    .printwrap { animation: qd-print 0.45s cubic-bezier(0.2, 0.9, 0.3, 1) both; }
+
+    .label {
+      background: var(--label-cream);
+      background-image: repeating-linear-gradient(0deg,
+        rgba(34, 30, 25, 0.025) 0px, rgba(34, 30, 25, 0.025) 1px,
+        transparent 1px, transparent 3px);
+      color: var(--ink);
+      width: 100%;
+      max-width: 440px;
+      margin: 0 auto;
+      padding: 22px 24px 18px;
+      border-radius: 6px;
+      border: 1px solid var(--label-edge);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    .label-top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--ink-soft);
+      border-bottom: 1.5px solid var(--ink);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+    .rx-mark { color: var(--cherry); font-weight: 700; }
+
+    .drug-name {
+      font-family: var(--display);
+      font-weight: 900;
+      font-size: clamp(24px, 6vw, 32px);
+      line-height: 1.02;
+      letter-spacing: 0.01em;
+      color: var(--ink);
+      margin: 0 0 3px;
+    }
+    .drug-strength {
+      font-size: 0.5em;
+      font-weight: 600;
+      color: var(--cherry);
+      white-space: nowrap;
+    }
+    .drug-generic {
+      font-size: 11px;
+      font-style: italic;
+      color: var(--ink-soft);
+      margin: 0 0 12px;
+    }
+
+    .field { margin-bottom: 10px; }
+    .field-label {
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+      margin-bottom: 2px;
+    }
+    .field-label.warn { color: var(--cherry); }
+    .field-value { font-size: 12.5px; line-height: 1.5; color: var(--ink); }
+
+    .boxed {
+      border: 2.5px solid var(--ink);
+      padding: 8px 10px;
+      margin: 12px 0 10px;
+      font-size: 11.5px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      line-height: 1.45;
+    }
+    .boxed strong { color: var(--cherry); font-weight: 700; }
+
+    .pharm-note {
+      font-family: var(--hand);
+      font-size: 19px;
+      line-height: 1.25;
+      color: #2E4A8C;
+      margin-top: 10px;
+      transform: rotate(-0.6deg);
+    }
+
+    .label-bottom {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 16px;
+      border-top: 1px dashed var(--ink-soft);
+      padding-top: 10px;
+    }
+    .barcode { display: flex; align-items: flex-end; gap: 2px; height: 30px; margin-top: 4px; }
+    .barcode span { background: var(--ink); opacity: 0.9; display: block; }
+    .label-meta {
+      font-size: 9px;
+      color: var(--ink-soft);
+      margin-top: 4px;
+      letter-spacing: 0.08em;
+    }
+    .signature {
+      font-family: var(--hand);
+      font-size: 17px;
+      color: var(--ink-soft);
+      text-align: right;
+      line-height: 1.1;
+    }
+    .signature small { font-size: 11px; font-family: var(--mono); display: block; margin-top: 2px; }
+
+    .stamp {
+      position: absolute;
+      top: 14px;
+      right: 18px;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.22em;
+      color: var(--amber);
+      border: 2.5px solid var(--amber);
+      border-radius: 4px;
+      padding: 3px 8px;
+      transform: rotate(8deg);
+      opacity: 0.92;
+      mix-blend-mode: multiply;
+      animation: qd-stamp-in 0.35s cubic-bezier(0.3, 1.4, 0.5, 1) 0.55s both;
+    }
+
+    /* ── footer ────────────────────────────────────── */
+    footer {
+      margin-top: 36px;
+      text-align: center;
+      font-size: 10.5px;
+      color: var(--shelf-dim);
+      letter-spacing: 0.06em;
+      line-height: 2;
+      max-width: 460px;
+    }
+    .shelf-count { color: #9DBCAE; margin-bottom: 6px; }
+    footer a { color: var(--shelf-text); }
+    footer a:hover { color: var(--amber); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .printwrap, .stamp { animation: none !important; }
+      .stamp { opacity: 0.92; }
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+  <a class="home-link" href="/">&larr; qualiacology</a>
+
+  <header>
+    <p class="eyebrow">Dept. of Impossible Pharmacology</p>
+    <h1>The Qualiacology<br />Dispensary</h1>
+    <p class="tagline">Compounds for conditions that don't exist yet.</p>
+  </header>
+
+  <button class="capsule" id="dispense" type="button" aria-label="Dispense a compound">
+    <span class="capsule-body">
+      <span class="capsule-half white">DIS</span>
+      <span class="capsule-half cherry">PENSE</span>
+    </span>
+  </button>
+
+  <main>
+    <div class="restock" id="restock" hidden>FORMULARY EXHAUSTED &mdash; RESTOCKING SHELVES&hellip;</div>
+    <div id="tray" aria-live="polite">
+      <div class="empty-tray">
+        The counter is empty.<br />
+        Press the capsule. Tell no one your symptoms &mdash;<br />
+        the formulary already knows.
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="shelf-count" id="shelf-count" hidden></div>
+    No compound on these labels exists. Yet. &middot; For entertainment, not treatment.
+    &middot; Side effects of reading this site include mild amusement and one (1)
+    involuntary exhale through the nose.
+    <br /><a href="/#toys">&larr; back to the toy shelf</a>
+  </footer>
+
+  <script>
+    "use strict";
+
+    const FORMULARY = [
+      {
+        brand: "NOSTALGIPRAM",
+        generic: "nostalgipram hydrobromide",
+        strength: "20 mg",
+        drugClass: "Selective Nostalgia Reuptake Inhibitor (the other SNRI)",
+        indication: "Acute longing. Golden-hour dysregulation. The smell of a specific year.",
+        moa: "Inhibits presynaptic reuptake of nostalgia, prolonging signal duration of summers that cannot be independently verified.",
+        effects: "Common (\u226510%): smelling chlorine indoors; tenderness toward strangers' porch lights. Rare: vivid recall of a kitchen you have never stood in.",
+        warning: "Do not discontinue abruptly. Sudden cessation may cause the present tense.",
+        note: "MAOI interaction: none. We checked twice. Someone always asks."
+      },
+      {
+        brand: "OBLIVEX",
+        generic: "forgetamine extended-release",
+        strength: "50 mg ER",
+        drugClass: "NMDA antagonist, 3 a.m. replay subtype",
+        indication: "Intrusive recall of that thing you said in 2014.",
+        moa: "Blocks reconsolidation at the cringe engram. Mechanism disputed in the literature \u2014 one Australian is right and everyone else is catching up.",
+        effects: "May also delete where you put your keys. Paradoxical nostalgia for the cringe has been reported.",
+        boxed: "DO NOT OPERATE HEAVY EMOTIONAL MACHINERY."
+      },
+      {
+        brand: "REFRAINIX",
+        generic: "decatchine sodium",
+        strength: "10 mg ODT",
+        drugClass: "Abortive earworm therapy",
+        indication: "A song stuck on hour six. You don't even like the song.",
+        moa: "Competitive antagonist at the basal ganglia jukebox (BGJ-1).",
+        effects: "Humming withdrawal. In trials, 4% of patients reported the song being replaced by a worse song.",
+        note: "Dissolve under tongue. Do not chew to the beat."
+      },
+      {
+        brand: "D\u00C9J\u00C0VUDINE",
+        generic: "recurrenavir",
+        strength: "100 mg",
+        drugClass: "Anti-recurrence agent",
+        indication: "Prophylaxis of recurrent d\u00e9j\u00e0 vu.",
+        moa: "Unclear. Believed to have been unclear before.",
+        effects: "At supratherapeutic doses: jamais vu \u2014 your own hallway becomes a showroom.",
+        warning: "If you have read this label before, take the second tablet.",
+        note: "Pharmacokinetics established in 2031, retroactively."
+      },
+      {
+        brand: "MONDAZEPAM",
+        generic: "mondazepam",
+        strength: "0.5 mg",
+        drugClass: "Anticipatory anxiolytic \u00b7 Schedule C-V (the V is for vibes)",
+        indication: "Sunday Scaries, refractory.",
+        moa: "Positive allosteric modulation of GABA-A, Friday subunit (\u03b1-TGIF).",
+        effects: "Wednesday may feel ambiguous. Calendar blindness. Inappropriate weekend confidence.",
+        warning: "Tolerance develops by Thursday."
+      },
+      {
+        brand: "SCROLLITHIUM",
+        generic: "thumbium carbonate",
+        strength: "300 mg",
+        drugClass: "Mood stabilizer, feed-induced",
+        indication: "Doomscroll cycling.",
+        moa: "Raises the activation energy of the thumb.",
+        effects: "Sudden awareness of the room you are in.",
+        boxed: "ABRUPT CESSATION MAY CAUSE EYE CONTACT. Monitor serum levels: the therapeutic window between informed and ruined is narrow."
+      },
+      {
+        brand: "BANALPROEX",
+        generic: "banalproex sodium",
+        strength: "250 mg DR",
+        drugClass: "Small-talk tolerance agent",
+        indication: "Weddings. Elevators. \u201CWorking hard or hardly working?\u201D",
+        moa: "Blunts cortical salience of weather-related discourse.",
+        effects: "You may begin to enjoy it. This is irreversible.",
+        note: "Loading dose recommended before family gatherings."
+      },
+      {
+        brand: "PLACEBIN FORTE",
+        generic: "belief, micronized",
+        strength: "40% stronger",
+        drugClass: "Expectation agonist",
+        indication: "Everything, somewhat.",
+        moa: "Now 40% stronger than regular Placebin. Outperformed itself in three of five trials.",
+        effects: "Identical to those of regular Placebin, but you will feel them more.",
+        note: "Works best if you pay full price."
+      },
+      {
+        brand: "AWEGMENTIN",
+        generic: "sublimicillin / wonderlanate",
+        strength: "875 mg",
+        drugClass: "Sublime re-sensitizer",
+        indication: "Hedonic adaptation. You saw the Grand Canyon and said \u201Cneat.\u201D",
+        moa: "Full agonist at the awe receptor (WHOA-1); restores baseline astonishment.",
+        effects: "Weeping at parking-lot sunsets. Spontaneous gratitude \u2014 report if persistent.",
+        warning: "Take with food, slowly, while really looking at the food."
+      },
+      {
+        brand: "PROCRASTINOLOL",
+        generic: "procrastinolol",
+        strength: "40 mg",
+        drugClass: "Deadline beta-blocker",
+        indication: "Performance anxiety.",
+        moa: "Blocks adrenergic response to looming deadlines.",
+        effects: "Calm. Profound, unproductive calm.",
+        warning: "Also blocks performance.",
+        note: "Take tomorrow."
+      },
+      {
+        brand: "QUALIAFEN",
+        generic: "rephenomenol",
+        strength: "200 mg",
+        drugClass: "Phenomenal restorative",
+        indication: "Qualia deficiency. The red looks less red lately. Music sounds like information.",
+        moa: "Restores felt quality to raw sensory throughput. Mechanism cannot be described, only experienced.",
+        effects: "Mild synesthesia of limited commercial value. Knowing the color of Tuesday.",
+        note: "The flagship compound. The whole department is named after this one."
+      },
+      {
+        brand: "HYPNOPOMPINE",
+        generic: "hypnopompine sublingual",
+        strength: "5 mg SL",
+        drugClass: "Threshold agent",
+        indication: "Snooze dependence.",
+        moa: "Stabilizes the hypnopompic state between alarms.",
+        effects: "Dreams gain a loading screen.",
+        warning: "You live in the snooze now."
+      },
+      {
+        brand: "MAINCHARACTROL",
+        generic: "protagonil",
+        strength: "25 mg",
+        drugClass: "Narrative antagonist",
+        indication: "Main character syndrome.",
+        moa: "NPC-1 receptor agonist; downregulates self-insertion into ambient events.",
+        effects: "Appearing as a background extra in your own flashbacks. Sudden comfort at parties nobody is watching.",
+        note: "The rain is not about you. Take once daily until this lands."
+      },
+      {
+        brand: "LIMINALTAB",
+        generic: "thresholdazine",
+        strength: "75 mg",
+        drugClass: "Transitional-space modulator",
+        indication: "Distress in empty airports, hotel hallways at 2 a.m., and the last day of a job.",
+        moa: "Partial agonist at the doorway receptor; permits standing between two rooms indefinitely without dread.",
+        effects: "Fondness for parking garages. Hearing fluorescent lights as a chord.",
+        warning: "Do not combine with arrival. May prolong the in-between past its natural half-life."
+      }
+    ];
+
+    // ── helpers ──────────────────────────────────────
+    function shuffle(arr) {
+      const a = arr.slice();
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function makeRx() {
+      return String(Math.floor(100000 + Math.random() * 900000))
+        .replace(/(\d{3})(\d{3})/, "$1-$2");
+    }
+
+    function makeBars(rxString) {
+      const digits = rxString.replace(/\D/g, "").split("").map(Number);
+      const bars = [];
+      for (let i = 0; i < 28; i++) {
+        const d = digits[i % digits.length];
+        bars.push(1 + ((d + i) % 3));
+      }
+      return bars;
+    }
+
+    function esc(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    function field(labelText, value, warn) {
+      return '<div class="field">'
+        + '<div class="field-label' + (warn ? " warn" : "") + '">' + esc(labelText) + '</div>'
+        + '<div class="field-value">' + esc(value) + '</div>'
+        + '</div>';
+    }
+
+    // ── render ───────────────────────────────────────
+    const tray = document.getElementById("tray");
+    const restockEl = document.getElementById("restock");
+    const shelfCount = document.getElementById("shelf-count");
+    const btn = document.getElementById("dispense");
+
+    function renderLabel(c) {
+      const rx = makeRx();
+      const bars = makeBars(rx);
+      const rotation = (Math.random() * 3.2 - 1.6).toFixed(2);
+
+      let html = '<div class="printwrap"><div class="label" role="region" '
+        + 'aria-label="Prescription label for ' + esc(c.brand) + '" '
+        + 'style="transform: rotate(' + rotation + 'deg);">';
+
+      html += '<div class="label-top">'
+        + '<span><span class="rx-mark">\u211E</span> #' + rx + '</span>'
+        + '<span>QTY: 30 \u00b7 REFILLS: \u221E</span>'
+        + '</div>';
+
+      html += '<h2 class="drug-name">' + esc(c.brand)
+        + ' <span class="drug-strength">' + esc(c.strength) + '</span></h2>'
+        + '<p class="drug-generic">(' + esc(c.generic) + ')</p>';
+
+      html += field("Class", c.drugClass);
+      html += field("Indication", c.indication);
+      html += field("Mechanism of Action", c.moa);
+      html += field("Reported Effects", c.effects);
+      if (c.warning) html += field("Warning", c.warning, true);
+      if (c.boxed) {
+        html += '<div class="boxed"><strong>BOXED WARNING:</strong> ' + esc(c.boxed) + '</div>';
+      }
+      if (c.note) html += '<div class="pharm-note">' + esc(c.note) + '</div>';
+
+      let barcodeHtml = "";
+      for (let i = 0; i < bars.length; i++) {
+        const h = (i % 7 === 0) ? 30 : 24;
+        barcodeHtml += '<span style="width:' + bars[i] + 'px;height:' + h + 'px;"></span>';
+      }
+
+      html += '<div class="label-bottom">'
+        + '<div><div class="barcode" aria-hidden="true">' + barcodeHtml + '</div>'
+        + '<div class="label-meta">FILLED: today, technically \u00b7 EXP: eventually</div></div>'
+        + '<div class="signature">M. Milo, PharmD<small>license pending in this reality</small></div>'
+        + '</div>';
+
+      html += '<div class="stamp" aria-hidden="true">FILLED</div>';
+      html += '</div></div>';
+      return html;
+    }
+
+    // ── deck logic ───────────────────────────────────
+    let deck = shuffle(FORMULARY.map(function (_, i) { return i; }));
+    let restockTimer = null;
+
+    function dispense() {
+      if (deck.length === 0) {
+        deck = shuffle(FORMULARY.map(function (_, i) { return i; }));
+        restockEl.hidden = false;
+        clearTimeout(restockTimer);
+        restockTimer = setTimeout(function () { restockEl.hidden = true; }, 1400);
+      }
+      const next = deck.shift();
+      tray.innerHTML = renderLabel(FORMULARY[next]);
+      shelfCount.hidden = false;
+      shelfCount.textContent = "formulary: " + deck.length + " of "
+        + FORMULARY.length + " compounds remaining on shelf";
+    }
+
+    btn.addEventListener("click", dispense);
+  </script>
+</body>
+</html>
