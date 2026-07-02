@@ -257,7 +257,7 @@
           const script = document.createElement('script');
           script.type = 'module';
           script.crossOrigin = '';
-          script.src = './assets/index-cute-fast-stable-v81.js?v=81';
+          script.src = './assets/index-cute-fast-stable-v82.js?v=82';
           script.addEventListener('error', () => {
             rememberRuntimeError('The Glide game module failed to load.');
             showFallback('The forest could not finish loading. Refresh once, or try a current browser with hardware acceleration enabled.');
@@ -277,7 +277,7 @@
 
               if (game.__uprightGlidePatched) return;
               game.__uprightGlidePatched = true;
-              game.__glideMotionPatchVersion = 'v80-fast-stable-treegrab';
+              game.__glideMotionPatchVersion = 'v82-fast-stable-climbstick';
 
               const { player, squirrel } = game;
               if (game.engine && game.engine.renderer && game.engine.renderer.setPixelRatio && !game.__renderCostCapped) {
@@ -341,11 +341,11 @@
                 subject.climbSeg = null;
                 subject.pitch = 0;
                 subject.roll = 0;
-                subject._grabCooldown = Math.max(subject._grabCooldown || 0, 0.45);
                 return true;
               };
               const snapToGroundIfHeld = (subject, maxHeight = 2.75) => game.__diveHeld && snapToGround(subject, maxHeight, true);
               const settleLowGroundRun = (subject, input, maxHeight = 0.9) => {
+                if (subject?.state === 'climb') return false;
                 const wantsLaunch = game.__manualLaunchRequested || input?.action || input?._actionEdge;
                 if (game.__diveHeld || wantsLaunch || subject?.velocity?.y > 1.4) return false;
                 return snapToGround(subject, maxHeight);
@@ -353,10 +353,8 @@
 
               const oldTryGrabTree = player._tryGrabTree && player._tryGrabTree.bind(player);
               if (oldTryGrabTree) {
-                player._tryGrabTree = function gentlerTryGrabTree(fromGround) {
-                  const ground = game.biomeAt ? game.biomeAt(this.position.x, this.position.z).ground : -Infinity;
-                  const nearGround = this.position.y < ground + 3.2;
-                  if ((fromGround || nearGround || game.__diveHeld) && !game.input?.action) return false;
+                player._tryGrabTree = function eagerTryGrabTree(fromGround) {
+                  if (game.__diveHeld) return false;
                   return oldTryGrabTree(fromGround);
                 };
               }
@@ -366,7 +364,7 @@
                 player._leap = function deliberateLeap(power, fromBranchEnd = false) {
                   const manualLaunch = game.__manualLaunchRequested || game.input?.action;
                   game.__manualLaunchRequested = false;
-                  if (this.state === 'climb' && !manualLaunch && !fromBranchEnd) {
+                  if (this.state === 'climb' && !manualLaunch && !fromBranchEnd && power > 0.5) {
                     if (this.velocity?.multiplyScalar) this.velocity.multiplyScalar(0.18);
                     this._grabCooldown = 0.12;
                     return;
@@ -1039,7 +1037,7 @@
               const installFluff = () => {
                 if (game.__fluffInstalled) return;
                 game.__fluffInstalled = true;
-                document.documentElement.dataset.glideCharacterPolish = 'cute-animal-v80-fast-stable-treegrab';
+                document.documentElement.dataset.glideCharacterPolish = 'cute-animal-v82-fast-stable-climbstick';
               };
 
               const findVistaOrigin = () => {
