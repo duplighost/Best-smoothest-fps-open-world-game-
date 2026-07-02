@@ -33,8 +33,11 @@ const FRAG = /* glsl */`
     float hi = smoothstep(0.28, 0.88, lum);
     col = mix(col * vec3(0.82, 0.92, 1.10), col * vec3(1.12, 1.00, 0.82), hi);
 
-    // gentle contrast + floor
-    col = (col - 0.5) * (1.06 + uPulse * 0.06 + uDread * 0.1) + 0.5;
+    // gentle contrast + floor — from the low-mids up only. A pivot-0.5 curve
+    // crushes everything under ~0.2 toward black, which made dim interiors
+    // unreadable; shadows keep their raw values so dark reads as shape.
+    vec3 filmic = (col - 0.5) * (1.06 + uPulse * 0.06 + uDread * 0.1) + 0.5;
+    col = mix(col, filmic, smoothstep(0.03, 0.28, lum));
     col = max(col, vec3(0.004));
 
     // halation on the brightest spots

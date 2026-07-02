@@ -37,10 +37,12 @@ export function mats() {
 // ---- the light rig -------------------------------------------------------------
 export class LightRig {
   constructor(camera) {
-    this.hemi = new THREE.HemisphereLight(0x1a1c22, 0x0a0908, 0.22);
+    this.hemi = new THREE.HemisphereLight(0x232630, 0x0d0c0a, 0.22);
 
-    // flashlight: spot with slight lag, warm-cold beam
-    this.flash = new THREE.SpotLight(0xf4e6c8, 0, 26, 0.46, 0.55, 1.4);
+    // flashlight: spot with slight lag, warm-cold beam. Wider + longer than the
+    // first cut — the beam is the player's eyes, and a pencil cone made rooms
+    // unreadable. The dark stays dark; what you aim at, you now actually see.
+    this.flash = new THREE.SpotLight(0xf4e6c8, 0, 32, 0.56, 0.6, 1.4);
     this.flash.castShadow = true;
     this.flash.shadow.mapSize.set(512, 512);
     this.flash.shadow.bias = -0.004;
@@ -86,7 +88,7 @@ export class LightRig {
     this.flash.position.copy(camera.position);
     this.flash.position.y -= 0.14;
     this.flashTarget.position.copy(camera.position).addScaledVector(this.flashDir, 8);
-    const targetI = this.flashOn ? 150 : 0;
+    const targetI = this.flashOn ? 200 : 0;
     this.flash.intensity += (targetI - this.flash.intensity) * Math.min(1, dt * 16);
 
     for (const pr of this.practicals) {

@@ -33,8 +33,12 @@ const FRAG = /* glsl */`
     float hi = smoothstep(0.28, 0.88, lum);
     col = mix(col * vec3(0.86, 0.92, 1.06), col * vec3(1.08, 1.00, 0.86), hi);
 
-    // gentle contrast + floor
-    col = (col - 0.5) * (1.06 + uPulse * 0.06 + uDread * 0.1) + 0.5;
+    // gentle contrast + floor — applied only from the low-mids up. A pivot-0.5
+    // curve steals what little light the dim scenery has (everything under
+    // ~0.2 sinks toward black), which is exactly the "I can't see" complaint;
+    // shadows keep their raw values so dark still reads as SHAPE, not void.
+    vec3 filmic = (col - 0.5) * (1.06 + uPulse * 0.06 + uDread * 0.1) + 0.5;
+    col = mix(col, filmic, smoothstep(0.03, 0.28, lum));
     col = max(col, vec3(0.004));
 
     // halation on the brightest spots

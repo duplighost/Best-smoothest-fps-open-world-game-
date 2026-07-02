@@ -39,7 +39,7 @@ export const FLOORS = [
     base: 0.1,
     stepSound: 'stepWood',
     tone: { sub: 44, subGain: 0.05, windFreq: 300, windGain: 0.022 },
-    hemi: 0.55,
+    hemi: 0.72,
     build(c) {
       const m = mats();
       // entry hall runs north; parlor west; kitchen east; cellar door at the end
@@ -157,7 +157,7 @@ export const FLOORS = [
     base: 0.22,
     stepSound: 'stepStone',
     tone: { sub: 36, subGain: 0.07, windFreq: 180, windGain: 0.032 },
-    hemi: 0.32,
+    hemi: 0.45,
     build(c) {
       const m = mats();
       room(c.scene, c.collide, 0, 0, 22, 15, 2.5, {
@@ -246,7 +246,7 @@ export const FLOORS = [
     stepSound: 'stepWater',
     water: 0.32,
     tone: { sub: 30, subGain: 0.09, windFreq: 120, windGain: 0.045 },
-    hemi: 0.3,
+    hemi: 0.42,
     build(c) {
       const m = mats();
       // one corridor. fifty-four meters. a light at the end.
@@ -316,7 +316,7 @@ export const FLOORS = [
     base: 0.26,
     stepSound: 'stepWood',
     tone: { sub: 48, subGain: 0.045, windFreq: 420, windGain: 0.02 },
-    hemi: 0.42,
+    hemi: 0.55,
     build(c) {
       const m = mats();
       room(c.scene, c.collide, 0, 0, 15, 12, 2.9, {
@@ -408,7 +408,7 @@ export const FLOORS = [
     base: 0.4,
     stepSound: 'stepStone',
     tone: { sub: 26, subGain: 0.1, windFreq: 90, windGain: 0.05 },
-    hemi: 0.13,
+    hemi: 0.17,
     build(c) {
       const m = mats();
       // an S of corridors, then the door. no lights. only her voice.

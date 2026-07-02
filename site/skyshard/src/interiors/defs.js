@@ -75,7 +75,7 @@ export const INTERIORS = {
   },
 
   belltower: {
-    fog: [0.05, 0.05, 0.07], fogDensity: 0.03, sun: 0.4, hemiIntensity: 0.45,
+    fog: [0.05, 0.05, 0.07], fogDensity: 0.03, sun: 0.55, hemiIntensity: 0.62,
     spawn: { x: 0, z: 1.6, yaw: 0 }, doorOutZ: 4.6, packTrigger: 2,
     build(c) {
       const m = mats();
@@ -93,6 +93,8 @@ export const INTERIORS = {
       c.pack('puff', 4, 0, 0, 2.5);
       c.mural(0, 1.8, -3.2, 0, 'spire', 2.2, 1.5);
       c.light(0, 11.5, 0, [0.8, 0.9, 1], 0.9);
+      c.light(0, 2.8, 0, [1, 0.8, 0.55], 0.85);       // the fight floor is lit, not guessed at
+      c.light(2.2, 6.4, -2.2, [0.85, 0.9, 1], 0.6);   // mid-climb waypoint
     },
     update(c, dt, t) {
       c._bell.rotation.z = Math.sin(t * 0.7) * 0.04;
@@ -163,7 +165,7 @@ export const INTERIORS = {
 
   // ---------------------------------------------------------- FROSTMERE
   lighthouse: {
-    fog: [0.06, 0.08, 0.11], fogDensity: 0.026, sun: 0.3, hemiIntensity: 0.55, hemiColor: [0.7, 0.85, 1],
+    fog: [0.06, 0.08, 0.11], fogDensity: 0.026, sun: 0.42, hemiIntensity: 0.66, hemiColor: [0.75, 0.88, 1],
     spawn: { x: 0, z: 4.8, yaw: 0 }, doorOutZ: 4.6,
     bossAt: { x: 0, z: -2 }, bossWake: 8,
     build(c) {
@@ -295,7 +297,7 @@ export const INTERIORS = {
 
   // ---------------------------------------------------------- THE SHATTER
   tower: {
-    fog: [0.05, 0.04, 0.08], fogDensity: 0.024, sun: 0.25, hemiIntensity: 0.45, hemiColor: [0.6, 0.5, 0.8],
+    fog: [0.05, 0.04, 0.08], fogDensity: 0.024, sun: 0.42, hemiIntensity: 0.62, hemiColor: [0.74, 0.68, 0.95],
     spawn: { x: 0, z: 5.2, y: 12, yaw: 0 }, doorOutZ: 4.2,
     bossAt: { x: 0, z: -3 }, bossWake: 7, packTrigger: 900, // no ambush — the descent is the show
     build(c) {
@@ -325,11 +327,14 @@ export const INTERIORS = {
       c.mural(0, 14.4, -7.2, 0, 'shatter', 4, 2.6);
       c.mural(0, 2.2, -7.2, 0, 'arrival', 3, 2);   // the oldest painting is at the "top" (bottom)
       c.light(0, 8, 0, [0.7, 0.55, 1], 1.2);
+      c.light(-4.5, 10.8, 2, [0.7, 0.55, 1], 0.7);    // each shelf of the descent glows
+      c.light(3.5, 5.6, -1.5, [0.7, 0.55, 1], 0.7);
+      c.light(5, 3.2, 3.5, [0.8, 0.6, 1], 0.6);
     },
   },
 
   observatory: {
-    fog: [0.04, 0.03, 0.07], fogDensity: 0.03, sun: 0.15, hemiIntensity: 0.45, hemiColor: [0.6, 0.55, 0.85],
+    fog: [0.04, 0.03, 0.07], fogDensity: 0.03, sun: 0.3, hemiIntensity: 0.6, hemiColor: [0.72, 0.68, 0.95],
     spawn: { x: 0, z: 3.4, yaw: 0 }, doorOutZ: 5.7, packTrigger: 2.5,
     build(c) {
       const m = mats();
