@@ -148,9 +148,10 @@ export class Terrain {
     geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
     geo.computeVertexNormals(); // flatShading ignores these, but keeps raycast sane
 
+    // vertices are already chunk-center-local (only heights were baked in),
+    // so the mesh transform alone places the chunk in the world
     const mesh = new THREE.Mesh(geo, this.mat);
     mesh.position.set(ox + CHUNK / 2, 0, oz + CHUNK / 2);
-    geo.translate(-ox - CHUNK / 2, 0, -oz - CHUNK / 2);
     mesh.receiveShadow = true;
     mesh.matrixAutoUpdate = false;
     mesh.updateMatrix();

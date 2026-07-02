@@ -5,6 +5,7 @@
 
 import * as THREE from 'three';
 import { DESTS, SPIRE } from './destdata.js';
+import { terrainHeight } from './terrain.js';
 import { REGIONS } from './regions.js';
 import { G } from '../state.js';
 import { mats, place, addCullable } from './props.js';
@@ -27,6 +28,7 @@ export class Destinations {
     this.time = 0;
 
     this._buildSpire();
+    this._floatingIsles();
     for (const d of DESTS) {
       const g = new THREE.Group();
       g.position.set(d.x, d.y, d.z);
@@ -128,6 +130,33 @@ export class Destinations {
       g.position.x + x + w / 2, g.position.z + z + d / 2,
       g.position.y + y - h / 2, g.position.y + y + h / 2
     );
+  }
+
+  // Floating isles over the Shatter — a playground for grapple/wings, each
+  // crowned with breakable crystals worth the climb.
+  _floatingIsles() {
+    const rng = makeRng(909);
+    const rock = new THREE.MeshStandardMaterial({ color: 0x4e4260, roughness: 1, flatShading: true });
+    this.isles = [];
+    const spots = [[260, -300, 10], [360, -330, 14], [420, -420, 12], [250, -470, 16], [330, -520, 11]];
+    for (const [x, z, lift] of spots) {
+      const y = terrainHeight(x, z) + lift;
+      const g = new THREE.Group();
+      g.position.set(x, y, z);
+      const body = new THREE.Mesh(new THREE.IcosahedronGeometry(4.2, 1), rock);
+      body.scale.set(1, 0.55, 1);
+      body.position.y = -1.9;
+      const under = new THREE.Mesh(new THREE.ConeGeometry(2.6, 4.5, 6), rock);
+      under.rotation.x = Math.PI;
+      under.position.y = -5.2;
+      g.add(body, under);
+      this.scene.add(g);
+      addCullable(g, x, z);
+      // landable top + solid core
+      this.collide.addBox(x - 3.4, z - 3.4, x + 3.4, z + 3.4, y - 2.4, y, { standable: true });
+      place(this.scene, this.collide, 'crystal', x + (rng() * 2 - 1) * 1.6, y, z + (rng() * 2 - 1) * 1.6, rng() * 3, { moteChance: 0.8 });
+      this.isles.push({ g, baseY: y, phase: rng() * Math.PI * 2 });
+    }
   }
 
   // ---------------------------------------------------------------- spire

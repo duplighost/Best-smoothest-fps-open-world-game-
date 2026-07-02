@@ -19,8 +19,12 @@ const _from = new THREE.Vector3();
 const _hit = new THREE.Vector3();
 const _tmp = new THREE.Vector3();
 
-const vmMat = (color, emissive = 0x000000, ei = 0) =>
-  new THREE.MeshStandardMaterial({ color, emissive, emissiveIntensity: ei, roughness: 0.6, metalness: 0.3 });
+// slight self-glow so the gun reads in dusk regions instead of silhouetting
+const vmMat = (color, emissive, ei = 0.5) =>
+  new THREE.MeshStandardMaterial({
+    color, roughness: 0.55, metalness: 0.25,
+    emissive: emissive ?? color, emissiveIntensity: emissive ? ei : 0.22,
+  });
 
 export class Weapon {
   constructor(camera, scene) {
@@ -38,12 +42,12 @@ export class Weapon {
     this.rig.position.set(0.24, -0.22, -0.48);
     camera.add(this.rig);
 
-    const body = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.11, 0.34), vmMat(0x2a3140));
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.11, 0.34), vmMat(0x55617a));
     body.position.z = -0.05;
-    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.035, 0.3, 8), vmMat(0x39424f));
+    const barrel = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.035, 0.3, 8), vmMat(0x6b7890));
     barrel.rotation.x = Math.PI / 2;
     barrel.position.set(0, 0.02, -0.28);
-    const grip = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.16, 0.08), vmMat(0x232833));
+    const grip = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.16, 0.08), vmMat(0x3c4356));
     grip.position.set(0, -0.12, 0.06);
     this.coreGlow = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 6),
       new THREE.MeshBasicMaterial({ color: 0x86d8ff, fog: false }));

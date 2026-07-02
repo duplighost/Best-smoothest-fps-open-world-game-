@@ -56,7 +56,9 @@ export class Rovers {
       const fall = clamp01(1.15 - Math.sqrt(r.d2) / 46);
       l.position.set(r.x, r.y, r.z);
       l.color.setRGB(r.color[0], r.color[1], r.color[2]);
-      l.intensity = r.intensity * fall;
+      // physical light units — request intensities are authored ~0.5-4,
+      // scale up so a lantern actually pools light on the floor
+      l.intensity = r.intensity * fall * 5;
       l.distance = r.range;
     }
     this.requests.length = 0;

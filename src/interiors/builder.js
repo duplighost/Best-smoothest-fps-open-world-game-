@@ -31,11 +31,22 @@ export class InteriorManager {
       region: REGIONS[dest.region],
       enemies: [],
 
-      // rectangular room centered at (0,0): floor, walls, optional ceiling
+      // rectangular room centered at (0,0): floor, walls, optional ceiling.
+      // Shell materials render double-sided — a box wall's inner face is a
+      // backface, and a room you can't see from inside is a void.
       room(w, d, h, opts = {}) {
         const m = mats();
-        const floorMat = opts.floor || m.stone;
-        const wallMat = opts.wall || m.stone;
+        const ds = (mat) => {
+          const k = '_ds';
+          if (!mat.userData[k]) {
+            const c = mat.clone();
+            c.side = THREE.DoubleSide;
+            mat.userData[k] = c;
+          }
+          return mat.userData[k];
+        };
+        const floorMat = ds(opts.floor || m.stone);
+        const wallMat = ds(opts.wall || m.stone);
         const floor = box(w, 0.4, d, floorMat);
         floor.position.y = -0.2;
         floor.receiveShadow = true;
@@ -67,7 +78,7 @@ export class InteriorManager {
           }
         }
         if (opts.ceiling !== false) {
-          const ceil = box(w, 0.4, d, opts.ceil || wallMat);
+          const ceil = box(w, 0.4, d, opts.ceil ? ds(opts.ceil) : wallMat);
           ceil.position.y = h + 0.2;
           scene.add(ceil);
           collide.addBox(-w / 2, -d / 2, w / 2, d / 2, h, h + 0.4);
@@ -174,7 +185,7 @@ export class InteriorManager {
         blending: THREE.AdditiveBlending, side: THREE.DoubleSide, depthWrite: false, fog: false,
       })
     );
-    const spawn = def.spawn || { x: 0, z: 8, yaw: Math.PI };
+    const spawn = def.spawn || { x: 0, z: 8, yaw: 0 };
     const spawnY = spawn.y ?? 0;
     veil.position.set(spawn.x, spawnY + 1.3, spawn.z + 1.2);
     scene.add(veil);
@@ -199,10 +210,14 @@ export class InteriorManager {
     G.interior = this.active;
     G.mode = 'interior';
 
-    // shared light rig + fx pools follow the player
+    // shared light rig + camera (it carries the viewmodel) + fx pools follow
+    scene.add(G.camera);
     scene.add(G.sun, G.sun.target, G.hemi);
-    G.sun.intensity = def.sun ?? 0.3;
-    G.hemi.intensity = def.hemiIntensity ?? 0.45;
+    // interiors have no sky bounce — the rig needs to work ~3x harder here
+    G.sun.intensity = (def.sun ?? 0.3) * 3.2;
+    G.sun.position.set(18, 30, 12);
+    G.sun.target.position.set(0, 0, 0);
+    G.hemi.intensity = (def.hemiIntensity ?? 0.45) * 4.2;
     if (def.hemiColor) G.hemi.color.setRGB(...def.hemiColor);
     G.rovers.moveTo(scene);
     G.particles.moveTo(scene);
@@ -211,6 +226,8 @@ export class InteriorManager {
     G.weapon.moveTracersTo(scene);
 
     if (!G.save.entered[dest.id]) { G.save.entered[dest.id] = true; save(); }
+    // compile interior shaders while the screen is still black — no first-frame hitch
+    G.renderer.compile(scene, G.camera);
     music.setMode('interior');
     sfx('door');
     return true;
@@ -241,6 +258,7 @@ export class InteriorManager {
     G.interior = null;
     G.mode = 'world';
 
+    G.worldScene.add(G.camera);
     G.worldScene.add(G.sun, G.sun.target, G.hemi);
     G.rovers.moveTo(G.worldScene);
     G.particles.moveTo(G.worldScene);

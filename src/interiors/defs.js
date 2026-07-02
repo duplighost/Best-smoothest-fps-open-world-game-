@@ -14,7 +14,7 @@ export const INTERIORS = {
   // ---------------------------------------------------------- VERDANT VALE
   mill: {
     fog: [0.10, 0.09, 0.06], fogDensity: 0.028, sun: 0.35, hemiIntensity: 0.5, hemiColor: [0.9, 0.8, 0.6],
-    spawn: { x: 0, z: 9, yaw: Math.PI }, doorOutZ: 7.0,
+    spawn: { x: 0, z: 9, yaw: 0 }, doorOutZ: 7.0,
     bossAt: { x: 0, z: -4 }, bossWake: 9, packTrigger: 7,
     build(c) {
       const m = mats();
@@ -52,7 +52,7 @@ export const INTERIORS = {
 
   hollowtree: {
     fog: [0.06, 0.05, 0.03], fogDensity: 0.04, sun: 0.15, hemiIntensity: 0.5, hemiColor: [0.95, 0.8, 0.55],
-    spawn: { x: 0, z: 3.6, yaw: Math.PI }, doorOutZ: 5.6, packTrigger: 3,
+    spawn: { x: 0, z: 3.6, yaw: 0 }, doorOutZ: 5.6, packTrigger: 3,
     build(c) {
       const m = mats();
       const bark = new THREE.MeshStandardMaterial({ color: 0x54402c, roughness: 1, flatShading: true });
@@ -76,7 +76,7 @@ export const INTERIORS = {
 
   belltower: {
     fog: [0.05, 0.05, 0.07], fogDensity: 0.03, sun: 0.4, hemiIntensity: 0.45,
-    spawn: { x: 0, z: 1.6, yaw: Math.PI }, doorOutZ: 4.6, packTrigger: 2,
+    spawn: { x: 0, z: 1.6, yaw: 0 }, doorOutZ: 4.6, packTrigger: 2,
     build(c) {
       const m = mats();
       c.room(7, 7, 13, { floor: m.stone, wall: m.stone });
@@ -102,7 +102,7 @@ export const INTERIORS = {
   // ---------------------------------------------------------- EMBER FLATS
   forge: {
     fog: [0.10, 0.04, 0.02], fogDensity: 0.030, sun: 0.1, hemiIntensity: 0.4, hemiColor: [1, 0.5, 0.3],
-    spawn: { x: 0, z: 8, yaw: Math.PI }, doorOutZ: 8.7,
+    spawn: { x: 0, z: 8, yaw: 0 }, doorOutZ: 8.7,
     bossAt: { x: 0, z: -4 }, bossWake: 9,
     build(c) {
       const m = mats();
@@ -138,7 +138,7 @@ export const INTERIORS = {
 
   pyramid: {
     fog: [0.07, 0.05, 0.02], fogDensity: 0.05, sun: 0.05, hemiIntensity: 0.35, hemiColor: [1, 0.7, 0.4],
-    spawn: { x: 0, z: 4.6, yaw: Math.PI }, doorOutZ: 10.2, packTrigger: 3,
+    spawn: { x: 0, z: 4.6, yaw: 0 }, doorOutZ: 10.2, packTrigger: 3,
     build(c) {
       const m = mats();
       const sand = new THREE.MeshStandardMaterial({ color: 0x6a4826, roughness: 1, flatShading: true });
@@ -164,7 +164,7 @@ export const INTERIORS = {
   // ---------------------------------------------------------- FROSTMERE
   lighthouse: {
     fog: [0.06, 0.08, 0.11], fogDensity: 0.026, sun: 0.3, hemiIntensity: 0.55, hemiColor: [0.7, 0.85, 1],
-    spawn: { x: 0, z: 4.8, yaw: Math.PI }, doorOutZ: 4.6,
+    spawn: { x: 0, z: 4.8, yaw: 0 }, doorOutZ: 4.6,
     bossAt: { x: 0, z: -2 }, bossWake: 8,
     build(c) {
       const m = mats();
@@ -195,7 +195,7 @@ export const INTERIORS = {
 
   fisher: {
     fog: [0.04, 0.05, 0.08], fogDensity: 0.05, sun: 0.1, hemiIntensity: 0.5, hemiColor: [0.7, 0.8, 1],
-    spawn: { x: 0, z: 2.0, yaw: Math.PI }, doorOutZ: 4.2, packTrigger: 1.5,
+    spawn: { x: 0, z: 2.0, yaw: 0 }, doorOutZ: 4.2, packTrigger: 1.5,
     build(c) {
       const m = mats();
       c.room(6.5, 6.5, 3.8, { floor: m.wood, wall: m.woodDark });
@@ -227,7 +227,7 @@ export const INTERIORS = {
   // ---------------------------------------------------------- MYCEL HOLLOW
   chapel: {
     fog: [0.03, 0.06, 0.06], fogDensity: 0.034, sun: 0.5, hemiIntensity: 0.4, hemiColor: [0.4, 0.7, 0.65],
-    spawn: { x: 0, z: 10, yaw: Math.PI }, doorOutZ: 8.8,
+    spawn: { x: 0, z: 10, yaw: 0 }, doorOutZ: 8.8,
     bossAt: { x: 0, z: -7 }, bossWake: 9,
     build(c) {
       const m = mats();
@@ -263,7 +263,7 @@ export const INTERIORS = {
 
   capcottage: {
     fog: [0.03, 0.05, 0.05], fogDensity: 0.045, sun: 0.05, hemiIntensity: 0.5, hemiColor: [0.5, 0.9, 0.8],
-    spawn: { x: 0, z: 3.4, yaw: Math.PI }, doorOutZ: 5.6, packTrigger: 2.5,
+    spawn: { x: 0, z: 3.4, yaw: 0 }, doorOutZ: 5.6, packTrigger: 2.5,
     build(c) {
       const m = mats();
       const shroom = new THREE.MeshStandardMaterial({ color: 0x5a4a3a, roughness: 1, flatShading: true });
@@ -296,7 +296,7 @@ export const INTERIORS = {
   // ---------------------------------------------------------- THE SHATTER
   tower: {
     fog: [0.05, 0.04, 0.08], fogDensity: 0.024, sun: 0.25, hemiIntensity: 0.45, hemiColor: [0.6, 0.5, 0.8],
-    spawn: { x: 0, z: 5.2, y: 12, yaw: Math.PI }, doorOutZ: 4.2,
+    spawn: { x: 0, z: 5.2, y: 12, yaw: 0 }, doorOutZ: 4.2,
     bossAt: { x: 0, z: -3 }, bossWake: 7, packTrigger: 900, // no ambush — the descent is the show
     build(c) {
       const m = mats();
@@ -330,7 +330,7 @@ export const INTERIORS = {
 
   observatory: {
     fog: [0.04, 0.03, 0.07], fogDensity: 0.03, sun: 0.15, hemiIntensity: 0.45, hemiColor: [0.6, 0.55, 0.85],
-    spawn: { x: 0, z: 3.4, yaw: Math.PI }, doorOutZ: 5.7, packTrigger: 2.5,
+    spawn: { x: 0, z: 3.4, yaw: 0 }, doorOutZ: 5.7, packTrigger: 2.5,
     build(c) {
       const m = mats();
       const stone = new THREE.MeshStandardMaterial({ color: 0x4c4660, roughness: 1, flatShading: true });

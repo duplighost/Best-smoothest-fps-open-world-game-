@@ -18,7 +18,7 @@ export class Player {
   constructor() {
     this.pos = new THREE.Vector3(0, 20, 0);      // feet
     this.vel = new THREE.Vector3();
-    this.yaw = Math.PI;                          // face the spire at spawn
+    this.yaw = 0;                                // forward is -z; the spire is north of spawn
     this.pitch = 0;
     this.grounded = false;
     this.coyote = 0;
