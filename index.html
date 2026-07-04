@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Hollow Moon — A Gothic Platformer</title>
+<style>
+  :root { --ink:#0c0714; --moon:#c9b8ff; --pumpkin:#ff8a1e; --ghost:#7ff0ff; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body {
+    height:100%; background:#05030a; overflow:hidden;
+    font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+    color:#e8e0ff; -webkit-user-select:none; user-select:none;
+    touch-action:none;
+  }
+  #wrap { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+  canvas {
+    display:block; image-rendering:pixelated;
+    background:#0a0616;
+    box-shadow:0 0 60px rgba(120,60,220,.35), 0 0 0 1px rgba(150,110,255,.15) inset;
+    max-width:100%; max-height:100%;
+  }
+  /* ---- HUD & overlays ---- */
+  #hud {
+    position:fixed; top:14px; left:16px; right:16px; display:flex; justify-content:space-between;
+    align-items:flex-start; pointer-events:none; font-size:14px; letter-spacing:.5px;
+    text-shadow:0 2px 6px #000; z-index:5;
+  }
+  .hearts { font-size:22px; filter:drop-shadow(0 0 6px #ff3a6a); line-height:1; }
+  .stat { text-align:right; opacity:.9; }
+  .stat b { color:var(--pumpkin); }
+  #overlay {
+    position:fixed; inset:0; display:flex; flex-direction:column; align-items:center;
+    justify-content:center; text-align:center; z-index:10; padding:24px;
+    background:radial-gradient(circle at 50% 35%, rgba(60,25,110,.55), rgba(5,3,10,.92) 70%);
+    backdrop-filter:blur(2px);
+  }
+  #overlay h1 {
+    font-size:clamp(38px,9vw,84px); letter-spacing:4px; margin-bottom:6px;
+    color:#f4ecff;
+    text-shadow:0 0 18px #a86bff, 0 0 42px #6a2ecb, 0 4px 0 #2a1050;
+  }
+  #overlay .sub { color:#c8a6ff; font-size:clamp(13px,2.4vw,18px); margin-bottom:26px; opacity:.9;}
+  .btn {
+    pointer-events:auto; cursor:pointer; border:none; border-radius:12px;
+    padding:14px 30px; font-size:18px; font-weight:bold; letter-spacing:1px;
+    color:#1a0b2e; background:linear-gradient(#ffb24d,#ff8a1e);
+    box-shadow:0 6px 0 #a5470a, 0 10px 24px rgba(255,138,30,.4);
+    transition:transform .08s, box-shadow .08s;
+  }
+  .btn:active { transform:translateY(4px); box-shadow:0 2px 0 #a5470a; }
+  .keys { margin-top:22px; font-size:13px; color:#9d86d6; line-height:1.9; }
+  .keys kbd {
+    background:#241640; border:1px solid #4a2f7d; border-bottom-width:3px; border-radius:6px;
+    padding:2px 9px; margin:0 2px; color:#e6d9ff; font-size:12px;
+  }
+  #overlay.hidden { display:none; }
+  .flavor { color:#8f79c9; font-size:12px; margin-top:20px; max-width:420px; line-height:1.6; }
+  /* ---- touch controls ---- */
+  #touch { position:fixed; inset:0; z-index:6; display:none; pointer-events:none; }
+  .pad { position:absolute; bottom:26px; pointer-events:auto; }
+  .tbtn {
+    width:74px; height:74px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    background:rgba(40,22,74,.55); border:2px solid rgba(150,110,255,.4); color:#e6d9ff;
+    font-size:30px; backdrop-filter:blur(3px); touch-action:none;
+  }
+  #tLeft { left:22px; } #tRight { left:118px; }
+  #tJump { right:22px; bottom:96px; } #tAtk { right:110px; }
+  .tbtn:active { background:rgba(120,70,200,.7); }
+  body.touch #touch { display:block; }
+</style>
+</head>
+<body>
+<div id="wrap"><canvas id="game" width="960" height="540"></canvas></div>
+
+<div id="hud">
+  <div class="hearts" id="hearts">🎃🎃🎃🎃🎃</div>
+  <div class="stat">Souls&nbsp;<b id="score">0</b><br><span id="depth" style="font-size:12px;opacity:.7"></span></div>
+</div>
+
+<div id="touch">
+  <div class="pad" id="tLeft"><div class="tbtn">◀</div></div>
+  <div class="pad" id="tRight"><div class="tbtn">▶</div></div>
+  <div class="pad" id="tJump"><div class="tbtn">⤒</div></div>
+  <div class="pad" id="tAtk"><div class="tbtn">⚔</div></div>
+</div>
+
+<div id="overlay">
+  <h1>HOLLOW&nbsp;MOON</h1>
+  <div class="sub">A gothic night in the graveyard of the restless dead</div>
+  <button class="btn" id="startBtn">Enter the Grave</button>
+  <div class="keys">
+    <kbd>A</kbd><kbd>D</kbd> or <kbd>←</kbd><kbd>→</kbd> move&nbsp;&nbsp;·&nbsp;&nbsp;
+    <kbd>Space</kbd>/<kbd>W</kbd> jump (double-jump)&nbsp;&nbsp;·&nbsp;&nbsp;
+    <kbd>J</kbd>/<kbd>K</kbd> slash
+  </div>
+  <div class="flavor" id="flavor">
+    Cut down skeletons, banish ghosts, and reach the far chapel gate.
+    Beware the spike pits below the moonlight.
+  </div>
+</div>
+
+<script>
+/* =========================================================================
+   HOLLOW MOON — a self-contained gothic action platformer.
+   Everything (art, physics, enemies) is drawn procedurally on a canvas.
+   ========================================================================= */
+(() => {
+'use strict';
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+// ---- responsive scaling of the fixed-resolution canvas ----
+function fit() {
+  const s = Math.min(window.innerWidth / W, window.innerHeight / H);
+  canvas.style.width = Math.floor(W * s) + 'px';
+  canvas.style.height = Math.floor(H * s) + 'px';
+}
+window.addEventListener('resize', fit); fit();
+
+// touch detection
+if (('ontouchstart' in window) || navigator.maxTouchPoints > 0) document.body.classList.add('touch');
+
+// ---------------------------------------------------------------- input
+const keys = {};
+const K = { left:false, right:false, jump:false, jumpEdge:false, atk:false, atkEdge:false };
+addEventListener('keydown', e => {
+  if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' '].includes(e.key)) e.preventDefault();
+  if (keys[e.code]) return; // ignore auto-repeat for edges
+  keys[e.code] = true;
+});
+addEventListener('keyup', e => { keys[e.code] = false; });
+
+function pollKeys() {
+  const l = keys['KeyA'] || keys['ArrowLeft'];
+  const r = keys['KeyD'] || keys['ArrowRight'];
+  const j = keys['Space'] || keys['KeyW'] || keys['ArrowUp'];
+  const a = keys['KeyJ'] || keys['KeyK'] || keys['KeyX'];
+  K.jumpEdge = j && !K.jump; K.jump = j;
+  K.atkEdge = a && !K.atk;  K.atk  = a;
+  K.left = l; K.right = r;
+}
+
+// touch bindings
+function bindTouch(id, on, off) {
+  const el = document.getElementById(id);
+  const set = v => e => { e.preventDefault(); v(); };
+  el.addEventListener('touchstart', set(on), {passive:false});
+  el.addEventListener('touchend',   set(off), {passive:false});
+  el.addEventListener('touchcancel',set(off), {passive:false});
+}
+bindTouch('tLeft', ()=>keys['ArrowLeft']=true, ()=>keys['ArrowLeft']=false);
+bindTouch('tRight',()=>keys['ArrowRight']=true,()=>keys['ArrowRight']=false);
+bindTouch('tJump', ()=>keys['Space']=true, ()=>keys['Space']=false);
+bindTouch('tAtk',  ()=>keys['KeyJ']=true, ()=>keys['KeyJ']=false);
+
+// ------------------------------------------------------------- utilities
+const rand = (a,b) => a + Math.random()*(b-a);
+const clamp = (v,a,b) => v<a?a:v>b?b:v;
+const rectHit = (a,b) =>
+  a.x < b.x+b.w && a.x+a.w > b.x && a.y < b.y+b.h && a.y+a.h > b.y;
+
+// ------------------------------------------------------------- game state
+const GRAV = 0.62, MAXFALL = 15;
+let state = 'menu';          // menu | play | dead | win
+let score = 0, camX = 0;
+let shake = 0, flash = 0;
+let time = 0;
+
+const particles = [];
+function spawnParticles(x,y,color,n,spd=4,life=30,size=3){
+  for(let i=0;i<n;i++){
+    const a=rand(0,Math.PI*2), s=rand(.3,1)*spd;
+    particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1,life,max:life,color,size:size*rand(.6,1.2)});
+  }
+}
+const floaters = []; // damage / soul text
+function floatText(x,y,txt,color){ floaters.push({x,y,txt,color,life:50}); }
+
+// --------------------------------------------------------------- level
+// A level is a scrolling ribbon of platforms, hazards, enemies, décor.
+const LEVEL_END = 5200;
+let platforms=[], hazards=[], enemies=[], pickups=[], decor=[], bridges=[], gate=null;
+
+function makeLevel(){
+  platforms=[]; hazards=[]; enemies=[]; pickups=[]; decor=[]; bridges=[]; camX=0; score=0;
+  const GROUND_Y = 470;
+
+  // A helper to add a stone platform
+  const plat=(x,y,w,h=26,type='stone')=>{ const p={x,y,w,h,type}; platforms.push(p); return p; };
+
+  // starting ledge
+  plat(0, GROUND_Y, 520);
+  addLanterns(60, GROUND_Y, 3);
+  decor.push({type:'grave', x:120, y:GROUND_Y-56});
+  decor.push({type:'pumpkin', x:360, y:GROUND_Y-30});
+
+  // rope bridge over a spike pit
+  bridges.push({x:520, y:GROUND_Y, w:230});
+  hazards.push({x:520, y:H-40, w:230, h:40, type:'spikes'});
+  plat(750, GROUND_Y, 360);
+  enemies.push(makeSkeleton(880, GROUND_Y));
+  decor.push({type:'pumpkin', x:790, y:GROUND_Y-30});
+
+  // floating graves & a ghost
+  plat(1180, 380, 150);
+  enemies.push(makeGhost(1240, 300));
+  plat(1150, GROUND_Y, 500);
+  hazards.push({x:1110, y:H-40, w:40, h:40, type:'spikes'});
+  addLanterns(1200, GROUND_Y, 4);
+  enemies.push(makeSkeleton(1420, GROUND_Y));
+  enemies.push(makePumpkin(1560, GROUND_Y));
+
+  // stair-step ruins climbing up
+  plat(1720, 430, 120); plat(1900, 360, 120); plat(2080, 290, 140);
+  enemies.push(makeGhost(1960, 280));
+  pickups.push({type:'soul', x:2120, y:250, taken:false, bob:rand(0,7)});
+  plat(2260, GROUND_Y, 520);
+  hazards.push({x:2180, y:H-40, w:80, h:40, type:'spikes'});
+  enemies.push(makeSkeleton(2400, GROUND_Y));
+  enemies.push(makeSkeleton(2560, GROUND_Y));
+  addLanterns(2300, GROUND_Y, 4);
+  decor.push({type:'grave', x:2680, y:GROUND_Y-56});
+
+  // long bridge chasm — the moonlit gap
+  bridges.push({x:2780, y:GROUND_Y, w:300});
+  hazards.push({x:2780, y:H-30, w:300, h:30, type:'spikes'});
+  plat(3080, GROUND_Y, 360);
+  enemies.push(makePumpkin(3220, GROUND_Y));
+  enemies.push(makeGhost(3260, 320));
+
+  // upper chapel platforms
+  plat(3480, 400, 130); plat(3660, 320, 130); plat(3840, 250, 150);
+  pickups.push({type:'heal', x:3900, y:210, taken:false, bob:rand(0,7)});
+  enemies.push(makeGhost(3720, 300));
+  plat(4020, GROUND_Y, 480);
+  hazards.push({x:3960, y:H-40, w:60, h:40, type:'spikes'});
+  enemies.push(makeSkeleton(4160, GROUND_Y));
+  enemies.push(makeSkeleton(4300, GROUND_Y));
+  enemies.push(makePumpkin(4420, GROUND_Y));
+  addLanterns(4060, GROUND_Y, 4);
+
+  // final approach to the chapel gate
+  bridges.push({x:4500, y:GROUND_Y, w:200});
+  hazards.push({x:4500, y:H-40, w:200, h:40, type:'spikes'});
+  plat(4700, GROUND_Y, 560);
+  enemies.push(makeSkeleton(4880, GROUND_Y));
+  enemies.push(makeGhost(4940, 330));
+  addLanterns(4740, GROUND_Y, 3);
+  gate = {x:5120, y:GROUND_Y-150, w:90, h:150};
+  decor.push({type:'grave', x:4820, y:GROUND_Y-56});
+
+  // scatter background pumpkins & tombstones for flavor
+  for(let i=0;i<26;i++){
+    decor.push({type:'bgpump', x:rand(0,LEVEL_END), y:GROUND_Y-8, s:rand(.5,1)});
+  }
+}
+function addLanterns(x,y,n){
+  for(let i=0;i<n;i++) decor.push({type:'lantern', x:x+i*rand(60,110), y:y-190-rand(0,40), sway:rand(0,7)});
+}
+
+// ------------------------------------------------------------ enemies
+function makeSkeleton(x,y){ return {kind:'skel', x, y:y-52, w:34, h:52, hp:3, vx:0, vy:0, dir:-1,
+  onGround:false, atkCd:0, hurt:0, home:x, range:150, dead:false, anim:rand(0,7)}; }
+function makeGhost(x,y){ return {kind:'ghost', x, y, w:38, h:40, hp:2, baseY:y, dead:false,
+  hurt:0, phase:rand(0,7), dir:-1, chase:0}; }
+function makePumpkin(x,y){ return {kind:'pumpkin', x, y:y-56, w:44, h:56, hp:5, vx:0, vy:0, dir:-1,
+  onGround:false, atkCd:0, hurt:0, home:x, range:190, dead:false, anim:rand(0,7)}; }
+
+// --------------------------------------------------------------- player
+const player = {
+  x:80, y:400, w:30, h:46, vx:0, vy:0, dir:1,
+  onGround:false, jumps:0, hp:5, maxHp:5,
+  atkTimer:0, atkCd:0, invuln:0, cloak:0, dead:false, coyote:0,
+};
+function resetPlayer(){
+  Object.assign(player,{x:80,y:400,vx:0,vy:0,dir:1,onGround:false,jumps:0,
+    hp:5,maxHp:5,atkTimer:0,atkCd:0,invuln:0,dead:false,coyote:0});
+}
+
+function hurtPlayer(dmg, srcX){
+  if(player.invuln>0||player.dead) return;
+  player.hp-=dmg; player.invuln=70;
+  player.vx = (player.x < srcX ? -1:1)*7; player.vy=-6;
+  shake=12; flash=6;
+  spawnParticles(player.x+player.w/2, player.y+player.h/2, '#ff3a6a', 14, 5);
+  updateHUD();
+  if(player.hp<=0){ player.dead=true; die(); }
+}
+
+// ---------------------------------------------------------- collisions
+function moveActor(a){
+  // horizontal
+  a.x += a.vx;
+  for(const p of solidPlatforms()){
+    if(rectHit(a,p)){
+      if(a.vx>0) a.x = p.x - a.w;
+      else if(a.vx<0) a.x = p.x + p.w;
+      a.vx=0;
+    }
+  }
+  // vertical
+  a.y += a.vy;
+  a.onGround=false;
+  for(const p of solidPlatforms()){
+    if(rectHit(a,p)){
+      if(a.vy>0){ a.y = p.y - a.h; a.onGround=true; }
+      else if(a.vy<0){ a.y = p.y + p.h; }
+      a.vy=0;
+    }
+  }
+}
+let _bridgePlats=[];
+function solidPlatforms(){ return _bridgePlats.length?platforms.concat(_bridgePlats):platforms; }
+function buildBridgePlats(){
+  _bridgePlats = bridges.map(b => ({x:b.x, y:b.y, w:b.w, h:12, type:'bridge'}));
+}
+
+// --------------------------------------------------------------- update
+function update(){
+  time++;
+  if(shake>0) shake*=0.86;
+  if(flash>0) flash--;
+  pollKeys();
+  if(state!=='play'){ updateParticles(); return; }
+
+  // ---- player movement ----
+  const accel = player.onGround?1.3:0.7, maxsp=4.6;
+  if(K.left){ player.vx-=accel; player.dir=-1; }
+  if(K.right){ player.vx+=accel; player.dir=1; }
+  if(!K.left && !K.right){ player.vx*=player.onGround?0.72:0.9; }
+  player.vx = clamp(player.vx,-maxsp,maxsp);
+
+  if(player.onGround){ player.jumps=2; player.coyote=8; }
+  else if(player.coyote>0) player.coyote--;
+
+  if(K.jumpEdge){
+    if(player.onGround||player.coyote>0){ player.vy=-11.4; player.jumps=1; player.coyote=0;
+      spawnParticles(player.x+player.w/2, player.y+player.h,'#b89bff',6,3); }
+    else if(player.jumps>0){ player.vy=-10.2; player.jumps--;
+      spawnParticles(player.x+player.w/2, player.y+player.h,'#8f7bff',10,4); } // double jump puff
+  }
+  player.vy = Math.min(player.vy+GRAV, MAXFALL);
+
+  moveActor(player);
+
+  // attack
+  if(player.atkCd>0) player.atkCd--;
+  if(player.atkTimer>0) player.atkTimer--;
+  if(K.atkEdge && player.atkCd<=0){
+    player.atkTimer=14; player.atkCd=22;
+    // slash hitbox
+    const hb={ x: player.dir>0?player.x+player.w-4:player.x-40+4, y:player.y-2, w:44, h:player.h+4 };
+    for(const e of enemies){ if(e.dead) continue;
+      if(rectHit(hb,e)){ damageEnemy(e, 1, player.x); }
+    }
+    spawnParticles(player.x+(player.dir>0?player.w+16:-16), player.y+player.h*0.5,'#e9d6ff',5,3,16,2);
+  }
+
+  // hazards (spikes) — fall in = big hurt / death pit
+  const feet={x:player.x+6,y:player.y+player.h-4,w:player.w-12,h:6};
+  for(const hz of hazards){ if(rectHit(feet,hz)||rectHit(player,hz)){ hurtPlayer(99, player.x); } }
+  if(player.y>H+80 && !player.dead){ hurtPlayer(99, player.x); }
+
+  if(player.invuln>0) player.invuln--;
+
+  // pickups
+  for(const pk of pickups){ if(pk.taken) continue;
+    pk.bob+=0.08;
+    const box={x:pk.x-14,y:pk.y-14,w:28,h:28};
+    if(rectHit(player,box)){
+      pk.taken=true;
+      if(pk.type==='soul'){ score+=5; floatText(pk.x,pk.y-20,'+5 soul','#c9a6ff');
+        spawnParticles(pk.x,pk.y,'#c9a6ff',16,4); }
+      else { player.hp=Math.min(player.maxHp,player.hp+2); floatText(pk.x,pk.y-20,'+2 ❤','#ff5c8a');
+        spawnParticles(pk.x,pk.y,'#ff5c8a',16,4); }
+      updateHUD();
+    }
+  }
+
+  updateEnemies();
+  updateParticles();
+
+  // camera follows player, clamped to level
+  const target = clamp(player.x - W*0.42, 0, LEVEL_END - W);
+  camX += (target-camX)*0.12;
+
+  // reach the gate → win
+  if(gate && rectHit(player,gate)){ win(); }
+
+  updateHUD();
+}
+
+function damageEnemy(e, dmg, srcX){
+  e.hp-=dmg; e.hurt=10;
+  spawnParticles(e.x+e.w/2, e.y+e.h/2, e.kind==='pumpkin'?'#ff8a1e':(e.kind==='ghost'?'#7ff0ff':'#dfeaff'), 12, 4);
+  const kd=(e.x<srcX?-1:1);
+  if(e.kind!=='ghost'){ e.vx=kd*4; e.vy=-3; }
+  else { e.x+=kd*10; }
+  shake=Math.max(shake,5);
+  if(e.hp<=0){ killEnemy(e); }
+}
+function killEnemy(e){
+  e.dead=true; score+=e.kind==='pumpkin'?4:(e.kind==='ghost'?2:3);
+  floatText(e.x+e.w/2, e.y, '+'+(e.kind==='pumpkin'?4:(e.kind==='ghost'?2:3)),'#ffd27f');
+  spawnParticles(e.x+e.w/2, e.y+e.h/2,
+     e.kind==='pumpkin'?'#ff8a1e':(e.kind==='ghost'?'#7ff0ff':'#e8f0ff'), 26, 6, 40, 4);
+  updateHUD();
+}
+
+function updateEnemies(){
+  const px=player.x+player.w/2;
+  for(const e of enemies){
+    if(e.dead){ continue; }
+    if(e.hurt>0) e.hurt--;
+
+    if(e.kind==='ghost'){
+      e.phase+=0.05;
+      const dist=Math.abs(px-(e.x+e.w/2));
+      if(dist<300){ // drift toward player
+        e.dir = px<e.x?-1:1;
+        e.x += e.dir*1.05;
+        e.y = e.baseY + Math.sin(e.phase)*26 + (player.y-e.baseY)*0.02;
+      } else {
+        e.y = e.baseY + Math.sin(e.phase)*26;
+      }
+      if(rectHit(player,e)) hurtPlayer(1, e.x);
+      continue;
+    }
+
+    // ground walkers (skeleton / pumpkin knight)
+    e.anim+=0.15;
+    e.vy=Math.min(e.vy+GRAV,MAXFALL);
+    const dist=px-(e.x+e.w/2);
+    if(Math.abs(dist)<e.range){
+      e.dir = dist<0?-1:1;
+      const sp=e.kind==='pumpkin'?1.0:1.5;
+      e.vx = e.dir*sp;
+    } else {
+      // patrol around home
+      if(e.x>e.home+70) e.dir=-1; else if(e.x<e.home-70) e.dir=1;
+      e.vx=e.dir*0.7;
+    }
+    // simple ledge guard: don't march into spike pits blindly when patrolling
+    moveActor(e);
+    if(e.vy>MAXFALL-1 && e.y>H) e.dead=true; // fell off
+
+    if(rectHit(player,e)){
+      if(e.atkCd<=0){ hurtPlayer(e.kind==='pumpkin'?2:1, e.x); e.atkCd=45; }
+    }
+    if(e.atkCd>0) e.atkCd--;
+  }
+}
+
+function updateParticles(){
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i]; p.x+=p.vx; p.y+=p.vy; p.vy+=0.22; p.vx*=0.98; p.life--;
+    if(p.life<=0) particles.splice(i,1);
+  }
+  for(let i=floaters.length-1;i>=0;i--){
+    const f=floaters[i]; f.y-=0.7; f.life--; if(f.life<=0) floaters.splice(i,1);
+  }
+}
+
+// =========================================================== RENDERING
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  const sx = (shake>0.5)?(Math.random()*2-1)*shake:0;
+  const sy = (shake>0.5)?(Math.random()*2-1)*shake:0;
+  ctx.save();
+  ctx.translate(sx,sy);
+
+  drawSky();
+  drawFarCastle();
+  drawMidGraves();
+
+  ctx.save();
+  ctx.translate(-camX,0);
+  drawDecorBack();
+  drawBridges();
+  drawPlatforms();
+  drawHazards();
+  drawGate();
+  drawPickups();
+  drawEnemies();
+  drawPlayer();
+  drawDecorFront();
+  drawParticles();
+  drawFloaters();
+  ctx.restore();
+
+  drawVignette();
+  if(flash>0){ ctx.fillStyle=`rgba(255,60,90,${flash/14})`; ctx.fillRect(0,0,W,H); }
+  ctx.restore();
+}
+
+// --- sky: moon, stars, purple gradient, bats ---
+function drawSky(){
+  const g=ctx.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#241147'); g.addColorStop(0.45,'#2c1657');
+  g.addColorStop(0.8,'#180a34'); g.addColorStop(1,'#0d0620');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+
+  // stars (parallax-lite, deterministic)
+  ctx.fillStyle='#d9ccff';
+  for(let i=0;i<70;i++){
+    const x=((i*137.5 - camX*0.15)%W+W)%W;
+    const y=(i*53)%260 + 10;
+    const tw=0.4+0.6*Math.abs(Math.sin(time*0.03+i));
+    ctx.globalAlpha=tw*0.7; ctx.fillRect(x,y,2,2);
+  }
+  ctx.globalAlpha=1;
+
+  // the moon
+  const mx=W*0.72 - camX*0.05, my=125, r=92;
+  const mg=ctx.createRadialGradient(mx,my,10,mx,my,r*1.7);
+  mg.addColorStop(0,'rgba(220,205,255,.55)'); mg.addColorStop(1,'rgba(150,110,255,0)');
+  ctx.fillStyle=mg; ctx.beginPath(); ctx.arc(mx,my,r*1.7,0,7); ctx.fill();
+  ctx.fillStyle='#e8ddff'; ctx.beginPath(); ctx.arc(mx,my,r,0,7); ctx.fill();
+  ctx.fillStyle='rgba(178,158,224,.5)';
+  [[-28,-18,15],[24,10,20],[6,36,11],[-36,26,9],[40,-28,10]].forEach(c=>{
+    ctx.beginPath(); ctx.arc(mx+c[0],my+c[1],c[2],0,7); ctx.fill();
+  });
+
+  // bats fluttering across the moon
+  ctx.fillStyle='#120a22';
+  for(let i=0;i<5;i++){
+    const bx=(mx-80 + ((time*1.2 + i*90)%360)-180);
+    const by=my-40 + Math.sin(time*0.06+i)*30 + i*8;
+    drawBat(bx,by, 8+ (i%2)*3, time*0.3+i);
+  }
+}
+function drawBat(x,y,s,t){
+  const flap=Math.sin(t)*0.6;
+  ctx.save(); ctx.translate(x,y);
+  ctx.beginPath();
+  ctx.moveTo(0,0);
+  ctx.quadraticCurveTo(-s, -s*flap-4, -s*2, 0);
+  ctx.quadraticCurveTo(-s, s*0.4, 0, s*0.5);
+  ctx.quadraticCurveTo(s, s*0.4, s*2, 0);
+  ctx.quadraticCurveTo(s, -s*flap-4, 0,0);
+  ctx.fill(); ctx.restore();
+}
+
+// --- far parallax castle silhouette ---
+function drawFarCastle(){
+  const ox=-camX*0.18;
+  ctx.save(); ctx.translate(ox,0);
+  ctx.fillStyle='#1c1140';
+  // rolling hill
+  ctx.beginPath(); ctx.moveTo(0,H);
+  ctx.lineTo(0,300); ctx.quadraticCurveTo(300,250,650,290);
+  ctx.quadraticCurveTo(1000,330,1400,270); ctx.lineTo(1400,H); ctx.fill();
+  // castle cluster
+  ctx.fillStyle='#241650';
+  drawCastle(560,150);
+  ctx.fillStyle='#1e123f'; drawCastle(760,205,0.7);
+  ctx.restore();
+
+  // nearer castle with lit windows
+  const ox2=-camX*0.32;
+  ctx.save(); ctx.translate(ox2,0);
+  ctx.fillStyle='#241452'; drawCastle(300,240,0.8);
+  litWindows(300,240,0.8);
+  ctx.restore();
+}
+function drawCastle(x,y,sc=1){
+  ctx.save(); ctx.translate(x,y); ctx.scale(sc,sc);
+  const tower=(tx,tw,th)=>{
+    ctx.fillRect(tx,0,tw,th);
+    // crenellations
+    for(let i=0;i<tw;i+=12) ctx.fillRect(tx+i,-8,7,8);
+    // spire
+    ctx.beginPath(); ctx.moveTo(tx-4,0); ctx.lineTo(tx+tw/2,-34); ctx.lineTo(tx+tw+4,0); ctx.fill();
+  };
+  ctx.fillRect(0,60,220,150);
+  tower(-6,46,150); tower(174,52,150); tower(80,60,120);
+  ctx.restore();
+}
+function litWindows(x,y,sc){
+  ctx.save(); ctx.translate(x,y); ctx.scale(sc,sc);
+  ctx.fillStyle='rgba(255,178,70,.85)';
+  for(let r=0;r<3;r++) for(let c=0;c<5;c++){
+    if(Math.sin((r*5+c)*2.3)>0) ctx.fillRect(18+c*40,80+r*40,10,16);
+  }
+  ctx.restore();
+}
+
+// --- mid ground dead trees / fence ---
+function drawMidGraves(){
+  const ox=-camX*0.5;
+  ctx.save(); ctx.translate(ox,0);
+  ctx.strokeStyle='#150c30'; ctx.lineWidth=6; ctx.lineCap='round';
+  for(let i=0;i<6;i++){
+    const bx=i*380-120;
+    drawDeadTree(bx, 470, 1+ (i%2)*0.3);
+  }
+  ctx.restore();
+}
+function drawDeadTree(x,groundY,sc){
+  ctx.save(); ctx.translate(x,groundY); ctx.scale(sc,sc);
+  ctx.strokeStyle='#160d31'; ctx.lineWidth=10;
+  ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(0,-140); ctx.stroke();
+  ctx.lineWidth=6;
+  const br=(ang,len,y)=>{ ctx.beginPath(); ctx.moveTo(0,y);
+    ctx.lineTo(Math.cos(ang)*len, y-Math.sin(ang)*len); ctx.stroke(); };
+  br(0.9,60,-110); br(2.2,70,-120); br(0.6,50,-80); br(2.6,45,-70);
+  ctx.restore();
+}
+
+// --- world décor behind platforms ---
+function drawDecorBack(){
+  for(const d of decor){
+    if(d.type==='bgpump'){
+      ctx.globalAlpha=0.5;
+      drawPumpkinObj(d.x, d.y, 10*d.s, false);
+      ctx.globalAlpha=1;
+    }
+    if(d.type==='lantern') drawLantern(d);
+    if(d.type==='grave') drawGrave(d.x,d.y);
+  }
+}
+function drawDecorFront(){
+  for(const d of decor){
+    if(d.type==='pumpkin') drawPumpkinObj(d.x,d.y,16,true);
+  }
+}
+
+function drawGrave(x,y){
+  ctx.fillStyle='#3a2c58';
+  ctx.beginPath();
+  ctx.moveTo(x,y+56); ctx.lineTo(x,y+16);
+  ctx.quadraticCurveTo(x,y, x+18,y); ctx.quadraticCurveTo(x+36,y, x+36,y+16);
+  ctx.lineTo(x+36,y+56); ctx.fill();
+  ctx.strokeStyle='#221838'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(x+18,y+14); ctx.lineTo(x+18,y+30);
+  ctx.moveTo(x+10,y+20); ctx.lineTo(x+26,y+20); ctx.stroke();
+}
+
+function drawLantern(d){
+  const sway=Math.sin(time*0.03+d.sway)*8;
+  const x=d.x+sway, y=d.y;
+  ctx.strokeStyle='#241638'; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(d.x,y-200); ctx.lineTo(x,y); ctx.stroke();
+  // glow
+  const gg=ctx.createRadialGradient(x,y+14,2,x,y+14,60);
+  gg.addColorStop(0,'rgba(255,150,40,.5)'); gg.addColorStop(1,'rgba(255,150,40,0)');
+  ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(x,y+14,60,0,7); ctx.fill();
+  drawPumpkinObj(x,y+14,14,true);
+}
+
+// jack-o-lantern
+function drawPumpkinObj(x,y,r,lit){
+  ctx.save(); ctx.translate(x,y);
+  ctx.fillStyle=lit?'#ff8a1e':'#7a4a10';
+  for(let i=-2;i<=2;i++){
+    ctx.beginPath(); ctx.ellipse(i*r*0.28,0,r*0.42,r,0,0,7); ctx.fill();
+  }
+  ctx.fillStyle=lit?'#b25e12':'#5c3a12';
+  ctx.beginPath(); ctx.ellipse(0,0,r*1.05,r,0,0,7); ctx.fill();
+  ctx.fillStyle=lit?'#ff8a1e':'#7a4a10';
+  ctx.beginPath(); ctx.ellipse(0,0,r*0.92,r*0.94,0,0,7); ctx.fill();
+  // stem
+  ctx.fillStyle='#3f6b2a'; ctx.fillRect(-2,-r-4,4,6);
+  if(lit){
+    ctx.fillStyle='#ffe27a';
+    // eyes
+    ctx.beginPath(); ctx.moveTo(-r*0.5,-r*0.15); ctx.lineTo(-r*0.15,-r*0.15); ctx.lineTo(-r*0.32,-r*0.5); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(r*0.5,-r*0.15); ctx.lineTo(r*0.15,-r*0.15); ctx.lineTo(r*0.32,-r*0.5); ctx.fill();
+    // grin
+    ctx.beginPath(); ctx.moveTo(-r*0.55,r*0.2);
+    ctx.lineTo(-r*0.3,r*0.5); ctx.lineTo(-r*0.1,r*0.25); ctx.lineTo(r*0.1,r*0.5);
+    ctx.lineTo(r*0.3,r*0.25); ctx.lineTo(r*0.55,r*0.5);
+    ctx.lineTo(r*0.4,r*0.15); ctx.fill();
+  }
+  ctx.restore();
+}
+
+// --- rope bridges ---
+function drawBridges(){
+  for(const b of bridges){
+    const planks=Math.floor(b.w/16);
+    // rope
+    ctx.strokeStyle='#4a3113'; ctx.lineWidth=3;
+    for(const off of [0,b.w]){}
+    ctx.beginPath();
+    for(let i=0;i<=planks;i++){
+      const x=b.x+i*16, sag=Math.sin(i/planks*Math.PI)*10;
+      if(i===0) ctx.moveTo(x,b.y+sag); else ctx.lineTo(x,b.y+sag);
+    }
+    ctx.stroke();
+    // planks
+    for(let i=0;i<planks;i++){
+      const x=b.x+i*16, sag=Math.sin(i/planks*Math.PI)*10;
+      ctx.fillStyle=i%2?'#5a3d1a':'#6b481f';
+      ctx.fillRect(x, b.y+sag, 13, 8);
+    }
+    // side ropes
+    ctx.strokeStyle='#3a2610'; ctx.lineWidth=2;
+    ctx.beginPath();
+    for(let i=0;i<=planks;i++){ const x=b.x+i*16, sag=Math.sin(i/planks*Math.PI)*10;
+      if(i===0) ctx.moveTo(x,b.y+sag-14); else ctx.lineTo(x,b.y+sag-14); }
+    ctx.stroke();
+  }
+}
+
+// --- platforms (mossy stone) ---
+function drawPlatforms(){
+  for(const p of platforms){
+    // stone body
+    ctx.fillStyle='#2b2140';
+    ctx.fillRect(p.x,p.y,p.w,p.h+40);
+    ctx.fillStyle='#3a2c54';
+    ctx.fillRect(p.x,p.y,p.w,p.h);
+    // top moss + highlight
+    ctx.fillStyle='#4d6b2f'; ctx.fillRect(p.x,p.y,p.w,5);
+    ctx.fillStyle='#5f8a3a';
+    for(let x=p.x+4;x<p.x+p.w;x+=18){ ctx.fillRect(x, p.y-2, 6, 4); }
+    // brick lines
+    ctx.strokeStyle='rgba(0,0,0,.25)'; ctx.lineWidth=1;
+    for(let x=p.x;x<p.x+p.w;x+=26){ ctx.beginPath(); ctx.moveTo(x,p.y+6); ctx.lineTo(x,p.y+p.h+40); ctx.stroke(); }
+    ctx.beginPath(); ctx.moveTo(p.x,p.y+16); ctx.lineTo(p.x+p.w,p.y+16); ctx.stroke();
+  }
+}
+
+// --- spike hazards (glowing purple) ---
+function drawHazards(){
+  for(const hz of hazards){
+    // eerie glow
+    const gg=ctx.createLinearGradient(0,hz.y-20,0,hz.y+hz.h);
+    gg.addColorStop(0,'rgba(180,80,255,0)'); gg.addColorStop(1,'rgba(160,60,255,.4)');
+    ctx.fillStyle=gg; ctx.fillRect(hz.x,hz.y-20,hz.w,hz.h+20);
+    const n=Math.floor(hz.w/16);
+    for(let i=0;i<n;i++){
+      const x=hz.x+i*16;
+      const flick=0.7+0.3*Math.sin(time*0.2+i);
+      ctx.fillStyle=`rgba(190,110,255,${flick})`;
+      ctx.beginPath(); ctx.moveTo(x,hz.y+hz.h); ctx.lineTo(x+8,hz.y-8); ctx.lineTo(x+16,hz.y+hz.h); ctx.fill();
+      ctx.fillStyle=`rgba(230,190,255,${flick})`;
+      ctx.beginPath(); ctx.moveTo(x+5,hz.y+hz.h); ctx.lineTo(x+8,hz.y+2); ctx.lineTo(x+11,hz.y+hz.h); ctx.fill();
+    }
+  }
+}
+
+// --- the chapel gate (goal) ---
+function drawGate(){
+  if(!gate) return;
+  const {x,y,w,h}=gate;
+  ctx.fillStyle='#2a2044';
+  ctx.beginPath();
+  ctx.moveTo(x,y+h); ctx.lineTo(x,y+30);
+  ctx.quadraticCurveTo(x, y, x+w/2, y);
+  ctx.quadraticCurveTo(x+w, y, x+w, y+30);
+  ctx.lineTo(x+w,y+h); ctx.fill();
+  // glowing doorway
+  const pulse=0.5+0.3*Math.sin(time*0.08);
+  const gg=ctx.createLinearGradient(0,y,0,y+h);
+  gg.addColorStop(0,`rgba(150,230,255,${pulse})`); gg.addColorStop(1,`rgba(90,150,255,${pulse*0.6})`);
+  ctx.fillStyle=gg;
+  ctx.beginPath();
+  ctx.moveTo(x+12,y+h); ctx.lineTo(x+12,y+34);
+  ctx.quadraticCurveTo(x+12,y+14,x+w/2,y+14);
+  ctx.quadraticCurveTo(x+w-12,y+14,x+w-12,y+34);
+  ctx.lineTo(x+w-12,y+h); ctx.fill();
+  // glow aura
+  const ag=ctx.createRadialGradient(x+w/2,y+h/2,10,x+w/2,y+h/2,140);
+  ag.addColorStop(0,`rgba(120,220,255,${pulse*0.4})`); ag.addColorStop(1,'rgba(120,220,255,0)');
+  ctx.fillStyle=ag; ctx.fillRect(x-80,y-80,w+160,h+160);
+  // little floating text
+  ctx.fillStyle='#bfeaff'; ctx.font='bold 13px Trebuchet MS'; ctx.textAlign='center';
+  ctx.fillText('CHAPEL GATE', x+w/2, y-14); ctx.textAlign='left';
+}
+
+// --- pickups (souls / hearts) ---
+function drawPickups(){
+  for(const pk of pickups){ if(pk.taken) continue;
+    const yy=pk.y+Math.sin(pk.bob)*5;
+    const gg=ctx.createRadialGradient(pk.x,yy,2,pk.x,yy,26);
+    if(pk.type==='soul'){ gg.addColorStop(0,'rgba(200,166,255,.9)'); gg.addColorStop(1,'rgba(200,166,255,0)');
+      ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(pk.x,yy,26,0,7); ctx.fill();
+      ctx.fillStyle='#e8d9ff'; ctx.beginPath(); ctx.arc(pk.x,yy,8,0,7); ctx.fill();
+      ctx.fillStyle='#c9a6ff'; ctx.beginPath(); ctx.arc(pk.x,yy,4,0,7); ctx.fill();
+    } else {
+      gg.addColorStop(0,'rgba(255,92,138,.9)'); gg.addColorStop(1,'rgba(255,92,138,0)');
+      ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(pk.x,yy,26,0,7); ctx.fill();
+      drawHeart(pk.x,yy,9,'#ff5c8a');
+    }
+  }
+}
+function drawHeart(x,y,s,c){
+  ctx.fillStyle=c; ctx.beginPath();
+  ctx.moveTo(x,y+s*0.7);
+  ctx.bezierCurveTo(x-s,y-s*0.3, x-s,y-s, x,y-s*0.35);
+  ctx.bezierCurveTo(x+s,y-s, x+s,y-s*0.3, x,y+s*0.7);
+  ctx.fill();
+}
+
+// --- enemies ---
+function drawEnemies(){
+  for(const e of enemies){ if(e.dead) continue;
+    ctx.save();
+    if(e.hurt>0){ ctx.globalAlpha=0.5+0.5*Math.sin(time); }
+    if(e.kind==='skel') drawSkeleton(e);
+    else if(e.kind==='pumpkin') drawPumpkinKnight(e);
+    else if(e.kind==='ghost') drawGhost(e);
+    ctx.restore();
+  }
+}
+
+function drawSkeleton(e){
+  const x=e.x, y=e.y, w=e.w, h=e.h, d=e.dir;
+  const wob=Math.sin(e.anim)*2;
+  ctx.save(); ctx.translate(x+w/2, y); ctx.scale(d,1);
+  // shield arm
+  ctx.fillStyle='#6b5230'; ctx.fillRect(-w*0.6,18,10,20);
+  ctx.fillStyle='#8a6a3f'; ctx.beginPath(); ctx.arc(-w*0.55,26,9,0,7); ctx.fill();
+  // legs
+  ctx.strokeStyle='#e6ecf5'; ctx.lineWidth=4; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-5,h-2); ctx.lineTo(-5+wob,h*0.6); ctx.moveTo(5,h-2); ctx.lineTo(5-wob,h*0.6); ctx.stroke();
+  // ribcage / body
+  ctx.fillStyle='#eef3fb'; ctx.fillRect(-9,h*0.32,18,h*0.3);
+  ctx.strokeStyle='#b9c4d6'; ctx.lineWidth=2;
+  for(let i=0;i<3;i++){ ctx.beginPath(); ctx.moveTo(-8,h*0.36+i*5); ctx.lineTo(8,h*0.36+i*5); ctx.stroke(); }
+  // sword arm
+  ctx.strokeStyle='#e6ecf5'; ctx.lineWidth=4;
+  ctx.beginPath(); ctx.moveTo(8,h*0.4); ctx.lineTo(16,h*0.5); ctx.stroke();
+  ctx.strokeStyle='#cfd8e6'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(16,h*0.5); ctx.lineTo(30,h*0.2); ctx.stroke();
+  // skull
+  ctx.fillStyle='#f2f6fc'; ctx.beginPath(); ctx.arc(0,h*0.2,10,0,7); ctx.fill();
+  ctx.fillStyle='#3a1e5c';
+  ctx.beginPath(); ctx.arc(-4,h*0.2,2.4,0,7); ctx.arc(4,h*0.2,2.4,0,7); ctx.fill();
+  // eye glow
+  ctx.fillStyle='#c86bff'; ctx.beginPath(); ctx.arc(-4,h*0.2,1.1,0,7); ctx.arc(4,h*0.2,1.1,0,7); ctx.fill();
+  ctx.restore();
+}
+
+function drawPumpkinKnight(e){
+  const x=e.x, y=e.y, w=e.w, h=e.h, d=e.dir;
+  const wob=Math.sin(e.anim)*2;
+  ctx.save(); ctx.translate(x+w/2, y); ctx.scale(d,1);
+  // legs armored
+  ctx.strokeStyle='#5a3f7a'; ctx.lineWidth=7; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(-7,h-2); ctx.lineTo(-7+wob,h*0.62); ctx.moveTo(7,h-2); ctx.lineTo(7-wob,h*0.62); ctx.stroke();
+  // shield
+  ctx.fillStyle='#6d4fa0'; ctx.beginPath();
+  ctx.moveTo(-w*0.62,20); ctx.lineTo(-w*0.42,16); ctx.lineTo(-w*0.42,40);
+  ctx.lineTo(-w*0.52,48); ctx.lineTo(-w*0.62,40); ctx.fill();
+  ctx.strokeStyle='#caa6ff'; ctx.lineWidth=2; ctx.stroke();
+  // body armor
+  ctx.fillStyle='#4a336e'; ctx.fillRect(-12,h*0.3,24,h*0.34);
+  ctx.fillStyle='#5c4188'; ctx.fillRect(-12,h*0.3,24,5);
+  // spear
+  ctx.strokeStyle='#7a5a30'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.moveTo(14,h*0.7); ctx.lineTo(20,-14); ctx.stroke();
+  ctx.fillStyle='#d8c6a0'; ctx.beginPath(); ctx.moveTo(20,-14); ctx.lineTo(15,-4); ctx.lineTo(25,-4); ctx.fill();
+  // pumpkin head
+  drawPumpkinObj(0,h*0.16,14,true);
+  ctx.restore();
+}
+
+function drawGhost(e){
+  const x=e.x+e.w/2, y=e.y+e.h/2;
+  const t=e.phase;
+  // outer glow
+  const gg=ctx.createRadialGradient(x,y,4,x,y,40);
+  gg.addColorStop(0,'rgba(127,240,255,.45)'); gg.addColorStop(1,'rgba(127,240,255,0)');
+  ctx.fillStyle=gg; ctx.beginPath(); ctx.arc(x,y,40,0,7); ctx.fill();
+  // body
+  ctx.fillStyle='rgba(150,245,255,.85)';
+  ctx.beginPath();
+  ctx.arc(x,y-4,15,Math.PI,0);
+  const tail=4;
+  for(let i=0;i<=tail;i++){
+    const px=x+15-(i/tail)*30;
+    const py=y+12+Math.sin(t*2+i)*4*(i%2?1:-1);
+    ctx.lineTo(px,py);
+  }
+  ctx.closePath(); ctx.fill();
+  // eyes
+  ctx.fillStyle='#0a2740';
+  ctx.beginPath(); ctx.ellipse(x-5,y-4,2.4,4,0,0,7); ctx.ellipse(x+5,y-4,2.4,4,0,0,7); ctx.fill();
+  ctx.fillStyle='#d6faff';
+  ctx.beginPath(); ctx.arc(x-5,y-6,1,0,7); ctx.arc(x+5,y-6,1,0,7); ctx.fill();
+}
+
+// --- the player: cloaked hero with a glinting blade ---
+function drawPlayer(){
+  const p=player;
+  if(p.dead) return;
+  if(p.invuln>0 && Math.floor(time/4)%2 && state==='play'){ /* blink */ return; }
+  const x=p.x+p.w/2, y=p.y, d=p.dir, h=p.h;
+  const run = p.onGround && Math.abs(p.vx)>0.6;
+  const step = run?Math.sin(time*0.35)*3:0;
+  ctx.save(); ctx.translate(x,y); ctx.scale(d,1);
+
+  // cloak sway
+  const cloakSway = p.vx*-0.6*d + Math.sin(time*0.1)*2;
+  ctx.fillStyle='#3a1b57';
+  ctx.beginPath();
+  ctx.moveTo(-8,h*0.28);
+  ctx.quadraticCurveTo(-16+cloakSway, h*0.6, -12+cloakSway, h*0.95);
+  ctx.lineTo(6, h*0.9); ctx.lineTo(6,h*0.3); ctx.fill();
+
+  // legs
+  ctx.strokeStyle='#241436'; ctx.lineWidth=6; ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(-3,h-2); ctx.lineTo(-3+step,h*0.66);
+  ctx.moveTo(4,h-2); ctx.lineTo(4-step,h*0.66); ctx.stroke();
+
+  // torso / tunic
+  ctx.fillStyle='#5a2d82'; ctx.fillRect(-8,h*0.32,16,h*0.36);
+  ctx.fillStyle='#7a3fae'; ctx.fillRect(-8,h*0.32,16,5);
+  // belt
+  ctx.fillStyle='#c98a2e'; ctx.fillRect(-8,h*0.6,16,4);
+
+  // sword arm + slash
+  if(p.atkTimer>0){
+    const prog=1-(p.atkTimer/14);
+    const a=-1.1 + prog*2.4;
+    ctx.save(); ctx.translate(8,h*0.42); ctx.rotate(a);
+    // arc after-image
+    ctx.strokeStyle='rgba(220,200,255,.5)'; ctx.lineWidth=6; ctx.lineCap='round';
+    ctx.beginPath(); ctx.arc(0,0,30,-0.6,0.6); ctx.stroke();
+    // blade
+    ctx.strokeStyle='#e9e0ff'; ctx.lineWidth=4;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(40,0); ctx.stroke();
+    ctx.strokeStyle='#a86bff'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(40,0); ctx.stroke();
+    ctx.fillStyle='#c98a2e'; ctx.fillRect(-3,-4,7,8);
+    ctx.restore();
+  } else {
+    // resting blade at side
+    ctx.strokeStyle='#241436'; ctx.lineWidth=5;
+    ctx.beginPath(); ctx.moveTo(6,h*0.42); ctx.lineTo(12,h*0.5); ctx.stroke();
+    ctx.strokeStyle='#cfc0f0'; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(12,h*0.5); ctx.lineTo(20,h*0.78); ctx.stroke();
+  }
+
+  // head + hood
+  ctx.fillStyle='#e2c39a'; ctx.beginPath(); ctx.arc(0,h*0.22,8,0,7); ctx.fill(); // face
+  ctx.fillStyle='#3a1b57'; // hood
+  ctx.beginPath();
+  ctx.arc(0,h*0.2,10,Math.PI*1.1,Math.PI*2.05);
+  ctx.lineTo(2,h*0.14); ctx.fill();
+  // glowing eyes under hood
+  ctx.fillStyle='#8ff0ff'; ctx.fillRect(1,h*0.2,3,2);
+
+  ctx.restore();
+}
+
+function drawParticles(){
+  for(const p of particles){
+    ctx.globalAlpha=Math.max(0,p.life/p.max);
+    ctx.fillStyle=p.color;
+    ctx.fillRect(p.x-p.size/2,p.y-p.size/2,p.size,p.size);
+  }
+  ctx.globalAlpha=1;
+}
+function drawFloaters(){
+  ctx.textAlign='center'; ctx.font='bold 14px Trebuchet MS';
+  for(const f of floaters){
+    ctx.globalAlpha=Math.min(1,f.life/25);
+    ctx.fillStyle='#000'; ctx.fillText(f.txt,f.x+1,f.y+1);
+    ctx.fillStyle=f.color; ctx.fillText(f.txt,f.x,f.y);
+  }
+  ctx.globalAlpha=1; ctx.textAlign='left';
+}
+
+function drawVignette(){
+  const g=ctx.createRadialGradient(W/2,H/2,H*0.35,W/2,H/2,H*0.85);
+  g.addColorStop(0,'rgba(0,0,0,0)'); g.addColorStop(1,'rgba(5,2,14,.7)');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+}
+
+// ============================================================ HUD / flow
+const overlay=document.getElementById('overlay');
+const heartsEl=document.getElementById('hearts');
+const scoreEl=document.getElementById('score');
+const depthEl=document.getElementById('depth');
+function updateHUD(){
+  let s=''; for(let i=0;i<player.maxHp;i++) s+= i<player.hp?'🎃':'🖤';
+  heartsEl.textContent=s;
+  scoreEl.textContent=score;
+  const pct=clamp(Math.round(player.x/LEVEL_END*100),0,100);
+  depthEl.textContent = pct+'% to the gate';
+}
+
+function showOverlay(title,sub,btn,flavor){
+  overlay.classList.remove('hidden');
+  overlay.querySelector('h1').innerHTML=title;
+  overlay.querySelector('.sub').textContent=sub;
+  overlay.querySelector('#startBtn').textContent=btn;
+  overlay.querySelector('#flavor').textContent=flavor;
+}
+function hideOverlay(){ overlay.classList.add('hidden'); }
+
+function startGame(){
+  makeLevel(); buildBridgePlats(); resetPlayer();
+  score=0; state='play'; hideOverlay(); updateHUD();
+}
+function die(){
+  state='dead'; shake=16;
+  spawnParticles(player.x+player.w/2,player.y+player.h/2,'#7a3fae',30,7,50,4);
+  setTimeout(()=>{
+    showOverlay('YOU PERISHED', 'The graveyard claims another soul…',
+      'Rise Again', `You gathered ${score} souls before the dark took you.`);
+  }, 700);
+}
+function win(){
+  state='win'; shake=8;
+  for(let i=0;i<3;i++) setTimeout(()=>spawnParticles(gate.x+gate.w/2,gate.y+40,'#8ff0ff',30,6,60,4), i*150);
+  setTimeout(()=>{
+    showOverlay('YOU ESCAPED', 'The chapel gate closes behind you at last.',
+      'Haunt Again', `You reached the Chapel Gate with ${score} souls. The moon dims in respect.`);
+  }, 800);
+}
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+addEventListener('keydown', e=>{ if(e.code==='Enter' && state!=='play') startGame(); });
+
+// ---------------------------------------------------------------- loop
+let acc=0, last=performance.now();
+function loop(now){
+  const dt=now-last; last=now; acc+=dt;
+  // fixed-step update at 60fps for stable physics
+  let steps=0;
+  while(acc>=1000/60 && steps<4){ update(); acc-=1000/60; steps++; }
+  draw();
+  requestAnimationFrame(loop);
+}
+// show a live idle background under the menu
+makeLevel(); buildBridgePlats(); resetPlayer(); state='menu'; updateHUD();
+requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>
